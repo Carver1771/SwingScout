@@ -8,14 +8,16 @@
 <meta property="og:title" content="SwingScout — Find Golf Instructors in DFW">
 <meta property="og:description" content="Browse top-rated golf coaches across 70+ venues in Dallas–Fort Worth. See where they teach, check ratings, and book your first lesson.">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://swingscout.com">
-<meta property="og:image" content="https://swingscout.com/og-image.png">
+<meta property="og:url" content="https://swingscoutgolf.com">
+<meta property="og:image" content="https://swingscoutgolf.com/og-image.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="SwingScout — Find Golf Instructors in DFW">
 <meta name="twitter:description" content="Browse top-rated golf coaches across 70+ venues in Dallas–Fort Worth.">
 <meta name="theme-color" content="#14442b">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23c9a84c'/><path d='M50 25v50M35 35l15-15 15 15' stroke='%2314442b' stroke-width='8' stroke-linecap='round' stroke-linejoin='round' fill='none'/></svg>">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-K52H2K3TNQ"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-K52H2K3TNQ');</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <style>
@@ -81,6 +83,7 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:#fafaf8;color:#1a1a1a
 /* ═══ MAP HINT ═══ */
 .map-hint{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);z-index:10;background:rgba(255,255,255,.92);backdrop-filter:blur(6px);border-radius:8px;padding:7px 16px;box-shadow:0 2px 10px rgba(0,0,0,.08);font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:6px;pointer-events:none;transition:opacity .3s}
 .map-hint.hidden{opacity:0}
+.leaflet-control-zoom{z-index:400!important}
 
 /* ═══ LAYOUT ═══ */
 .browse{display:flex;height:calc(100vh - 56px - 52px)}
@@ -113,7 +116,7 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:#fafaf8;color:#1a1a1a
 .card{padding:0;border-radius:14px;border:1px solid var(--border-light);cursor:pointer;transition:all .2s;background:var(--card);position:relative;overflow:hidden}
 .card:hover{border-color:var(--border);box-shadow:0 6px 24px rgba(0,0,0,.07);transform:translateY(-2px)}
 .card.selected,.card.pin-highlight{border-color:var(--brand);box-shadow:0 4px 20px rgba(27,94,59,.1)}
-.card-body{padding:16px 16px 14px 18px;display:flex;gap:14px}
+.card-body{padding:16px 40px 14px 18px;display:flex;gap:14px}
 .card-photo{width:64px;height:64px;border-radius:14px;object-fit:cover;flex-shrink:0}
 .card-info{flex:1;min-width:0}
 .card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
@@ -307,9 +310,9 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:#fafaf8;color:#1a1a1a
 .growing-banner .banner-x:hover{color:#8a6d1b}
 
 /* ═══ FAVORITES ═══ */
-.fav-btn{position:absolute;top:12px;right:12px;background:none;border:none;cursor:pointer;padding:4px;z-index:2;transition:transform .15s}
-.fav-btn:hover{transform:scale(1.2)}
-.fav-btn svg{width:18px;height:18px}
+.fav-btn{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.85);border:1px solid var(--border-light);border-radius:50%;width:30px;height:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2;transition:all .15s;padding:0}
+.fav-btn:hover{background:#fff;border-color:var(--border);transform:scale(1.1)}
+.fav-btn svg{width:16px;height:16px}
 
 /* ═══ REVIEWS IN PROFILE ═══ */
 .rev-card{padding:14px;border-radius:10px;background:var(--surface);border:1px solid var(--border-light);margin-bottom:8px}
@@ -416,6 +419,22 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:#fafaf8;color:#1a1a1a
 .selected-slot svg{flex-shrink:0}
 .selected-slot .change{margin-left:auto;font-size:12px;font-weight:500;color:var(--brand);cursor:pointer;text-decoration:underline;opacity:.7}
 .selected-slot .change:hover{opacity:1}
+
+/* ═══ MONTHLY CALENDAR ═══ */
+.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.cal-title{font-size:14px;font-weight:700;color:var(--text)}
+.cal-nav{display:flex;gap:4px}
+.cal-nav button{width:28px;height:28px;border-radius:7px;border:1px solid var(--border);background:var(--card);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);font-size:13px;transition:all .15s;font-family:inherit}
+.cal-nav button:hover{background:var(--surface);border-color:var(--text-muted)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:12px}
+.cal-dow{font-size:9px;font-weight:700;color:var(--text-muted);text-align:center;padding:4px 0;text-transform:uppercase;letter-spacing:.5px}
+.cal-day{aspect-ratio:1;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:default;color:var(--text-muted);background:transparent;border:1px solid transparent;transition:all .12s}
+.cal-day.empty{visibility:hidden}
+.cal-day.has-slots{background:var(--brand-lighter);color:var(--brand);font-weight:600;cursor:pointer;border-color:var(--brand-lighter)}
+.cal-day.has-slots:hover{background:var(--brand);color:#fff;border-color:var(--brand)}
+.cal-day.picked{background:var(--brand)!important;color:#fff!important;border-color:var(--brand)!important;font-weight:700}
+.cal-day.past{opacity:.3;pointer-events:none}
+.cal-day.today{border-color:var(--gold);font-weight:700}
 </style>
 </head>
 <body>
@@ -425,9 +444,9 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:#fafaf8;color:#1a1a1a
     <span class="logo-text">SwingScout</span>
   </div>
   <div class="header-divider"></div>
-  <div class="header-search"><span class="s-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg></span><input type="text" id="search-input" placeholder="Search instructors, courses, or cities..." oninput="sq=this.value;renderAll()"><button class="s-clear" id="s-clear" onclick="sq='';document.getElementById('search-input').value='';renderAll()" style="display:none">✕</button></div>
+  <div class="header-search"><span class="s-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg></span><input type="text" id="search-input" placeholder="Search by name, city, or ZIP code..." oninput="sq=this.value;renderAll()"><button class="s-clear" id="s-clear" onclick="sq='';document.getElementById('search-input').value='';renderAll()" style="display:none">✕</button></div>
   <div class="header-filters" id="hf"></div>
-  <nav class="nav-links" id="nav"><a class="nav-link" onclick="document.getElementById('how').scrollIntoView({behavior:'smooth'});closeNav()">How It Works</a><a class="nav-link" onclick="showCoachSignup();closeNav()">Teach on SwingScout</a><a class="nav-link" onclick="window.location='mai'+'lto:'+'hel'+'lo'+'@'+'swing'+'scout.com';closeNav()">Contact</a></nav>
+  <nav class="nav-links" id="nav"><a class="nav-link" onclick="document.getElementById('how').scrollIntoView({behavior:'smooth'});closeNav()">How It Works</a><a class="nav-link" onclick="showCoachSignup();closeNav()">Teach on SwingScout</a><a class="nav-link" onclick="showContact();closeNav()">Contact</a></nav>
   <button class="hamburger" onclick="toggleNav()" aria-label="Menu"><svg id="ham" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h18M3 6h18M3 18h18"/></svg></button>
 </div></header>
 
@@ -502,7 +521,7 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:#fafaf8;color:#1a1a1a
     <div class="footer-brand"><div class="logo-text">SwingScout</div><p>The easiest way to find and book golf instruction across Dallas–Fort Worth.</p></div>
     <div class="footer-links">
       <div class="footer-col"><h4>Product</h4><a onclick="window.scrollTo({top:0,behavior:'smooth'})">Browse Instructors</a><a onclick="document.getElementById('how').scrollIntoView({behavior:'smooth'})">How It Works</a><a onclick="showCoachSignup()">Become an Instructor</a></div>
-      <div class="footer-col"><h4>Company</h4><a onclick="showAbout()" style="cursor:pointer">About</a><a onclick="window.location='mail'+'to:'+'hello'+'@'+'swing'+'scout.com'" style="cursor:pointer">Contact Us</a></div>
+      <div class="footer-col"><h4>Company</h4><a onclick="showAbout()" style="cursor:pointer">About</a><a onclick="showContact()" style="cursor:pointer">Contact Us</a></div>
       <div class="footer-col"><h4>Legal</h4><a onclick="showPrivacy()" style="cursor:pointer">Privacy Policy</a><a onclick="showTerms()" style="cursor:pointer">Terms of Service</a></div>
     </div>
   </div>
@@ -612,14 +631,34 @@ function togFav(id,e){e.stopPropagation();if(favs.has(id))favs.delete(id);else f
 
 function gF(){
   let l=[...instructors];
-  if(sq.trim()){const q=sq.toLowerCase();l=l.filter(i=>{const loc=gL(i.lid);return i.name.toLowerCase().includes(q)||i.bio.toLowerCase().includes(q)||(loc&&loc.name.toLowerCase().includes(q))||(loc&&loc.city.toLowerCase().includes(q))||i.specs.some(s=>s.toLowerCase().includes(q))})}
+  const isZip=/^\d{5}$/.test(sq.trim());
+  if(isZip){
+    const z=parseInt(sq.trim());
+    const coords=ZIPS[z];
+    if(coords){
+      zipCoords=coords;
+      map.flyTo(coords,12,{duration:.8});
+    } else {
+      zipCoords=null;
+    }
+    // Show all instructors sorted by distance from ZIP
+    if(zipCoords){
+      l=l.map(i=>{const loc=gL(i.lid);return{...i,dist:haversine(zipCoords[0],zipCoords[1],loc.lat,loc.lng)}});
+      l.sort((a,b)=>a.dist-b.dist);
+    }
+  } else {
+    zipCoords=null;
+    if(sq.trim()){const q=sq.toLowerCase();l=l.filter(i=>{const loc=gL(i.lid);return i.name.toLowerCase().includes(q)||i.bio.toLowerCase().includes(q)||(loc&&loc.name.toLowerCase().includes(q))||(loc&&loc.city.toLowerCase().includes(q))||i.specs.some(s=>s.toLowerCase().includes(q))})}
+  }
   if(fLoc!=='all')l=l.filter(i=>i.lid===fLoc);
   if(fPGA)l=l.filter(i=>i.pga);
   if(fPrice==='under100')l=l.filter(i=>i.price<100);
   else if(fPrice==='100-125')l=l.filter(i=>i.price>=100&&i.price<=125);
   else if(fPrice==='125-150')l=l.filter(i=>i.price>125&&i.price<=150);
   else if(fPrice==='over150')l=l.filter(i=>i.price>150);
-  if(fSort==='price-low')l.sort((a,b)=>a.price-b.price);else if(fSort==='price-high')l.sort((a,b)=>b.price-a.price);else if(fSort==='rating')l.sort((a,b)=>b.rating-a.rating||b.revs-a.revs);else l.sort((a,b)=>(b.rating*b.revs)-(a.rating*a.revs));
+  if(!isZip){
+    if(fSort==='price-low')l.sort((a,b)=>a.price-b.price);else if(fSort==='price-high')l.sort((a,b)=>b.price-a.price);else if(fSort==='rating')l.sort((a,b)=>b.rating-a.rating||b.revs-a.revs);else l.sort((a,b)=>(b.rating*b.revs)-(a.rating*a.revs));
+  }
   return l;
 }
 
@@ -655,8 +694,13 @@ function openPop(id){
 const pSvg='<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>';
 const ckSvg='<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>';
 
+// ZIP code lookup for DFW area
+const ZIPS={75001:[32.95,-96.84],75002:[33.09,-96.67],75006:[32.93,-96.88],75007:[32.96,-96.90],75010:[32.95,-96.87],75013:[33.01,-96.70],75019:[32.95,-96.96],75023:[33.03,-96.73],75024:[33.05,-96.80],75025:[33.08,-96.77],75028:[33.08,-97.07],75034:[33.16,-96.85],75035:[33.15,-96.80],75040:[32.91,-96.64],75041:[32.86,-96.65],75042:[32.90,-96.70],75043:[32.82,-96.62],75044:[32.95,-96.68],75048:[32.92,-96.58],75050:[32.78,-96.92],75051:[32.73,-96.93],75052:[32.67,-97.01],75056:[33.08,-97.00],75060:[32.81,-96.95],75061:[32.85,-96.96],75062:[32.86,-96.92],75063:[32.90,-96.96],75067:[33.02,-97.00],75068:[33.08,-96.90],75069:[33.18,-96.63],75070:[33.18,-96.70],75071:[33.23,-96.67],75074:[33.05,-96.70],75075:[33.02,-96.73],75078:[33.20,-96.80],75080:[32.96,-96.73],75081:[32.96,-96.70],75082:[32.99,-96.66],75087:[32.89,-96.46],75088:[32.85,-96.53],75089:[32.91,-96.54],75093:[33.02,-96.80],75094:[33.00,-96.63],75098:[32.97,-96.57],75104:[32.62,-96.84],75114:[32.57,-96.54],75115:[32.64,-96.82],75116:[32.65,-96.74],75116:[32.66,-96.77],75119:[32.39,-96.69],75134:[32.61,-96.76],75137:[32.68,-96.79],75141:[32.68,-96.65],75146:[32.59,-96.69],75150:[32.77,-96.68],75154:[32.52,-96.87],75159:[32.68,-96.55],75166:[32.92,-96.44],75181:[32.75,-96.58],75201:[32.79,-96.80],75202:[32.78,-96.80],75204:[32.80,-96.79],75205:[32.83,-96.79],75206:[32.83,-96.77],75207:[32.79,-96.82],75208:[32.76,-96.84],75209:[32.84,-96.81],75210:[32.78,-96.76],75211:[32.74,-96.88],75212:[32.79,-96.87],75214:[32.82,-96.75],75215:[32.75,-96.77],75216:[32.71,-96.78],75217:[32.71,-96.69],75218:[32.84,-96.72],75219:[32.81,-96.81],75220:[32.86,-96.87],75223:[32.79,-96.76],75224:[32.73,-96.83],75225:[32.84,-96.79],75226:[32.78,-96.77],75228:[32.80,-96.68],75229:[32.89,-96.85],75230:[32.90,-96.79],75231:[32.88,-96.77],75232:[32.67,-96.79],75233:[32.72,-96.87],75234:[32.92,-96.88],75235:[32.84,-96.84],75236:[32.68,-96.89],75237:[32.66,-96.84],75238:[32.87,-96.72],75240:[32.93,-96.79],75241:[32.64,-96.76],75243:[32.91,-96.74],75244:[32.93,-96.84],75246:[32.80,-96.78],75247:[32.82,-96.89],75248:[32.96,-96.80],75249:[32.62,-96.88],75251:[32.92,-96.80],75252:[33.00,-96.78],75253:[32.62,-96.62],75254:[32.95,-96.82],75287:[32.98,-96.84],76001:[32.60,-97.14],76002:[32.65,-97.10],76006:[32.77,-97.08],76010:[32.72,-97.10],76011:[32.75,-97.10],76012:[32.75,-97.15],76013:[32.73,-97.18],76014:[32.70,-97.12],76015:[32.69,-97.16],76016:[32.68,-97.19],76017:[32.64,-97.17],76018:[32.66,-97.12],76021:[32.83,-97.16],76022:[32.85,-97.15],76028:[32.54,-97.20],76034:[32.86,-97.16],76036:[32.44,-97.35],76039:[32.83,-97.09],76040:[32.83,-97.12],76040:[32.84,-97.09],76051:[33.00,-97.09],76052:[32.96,-97.18],76053:[32.80,-97.15],76054:[32.83,-97.11],76060:[32.66,-97.05],76063:[32.55,-97.10],76065:[32.47,-96.99],76092:[32.96,-97.15],76102:[32.75,-97.33],76103:[32.74,-97.29],76104:[32.73,-97.32],76105:[32.72,-97.28],76106:[32.78,-97.35],76107:[32.74,-97.37],76109:[32.71,-97.38],76110:[32.71,-97.33],76111:[32.77,-97.30],76112:[32.74,-97.25],76114:[32.78,-97.39],76116:[32.73,-97.42],76117:[32.78,-97.28],76118:[32.80,-97.23],76119:[32.70,-97.25],76120:[32.76,-97.23],76123:[32.62,-97.37],76126:[32.68,-97.43],76127:[32.79,-97.44],76131:[32.86,-97.34],76132:[32.67,-97.38],76133:[32.66,-97.37],76134:[32.66,-97.33],76135:[32.82,-97.42],76137:[32.84,-97.30],76140:[32.63,-97.28],76148:[32.87,-97.28],76155:[32.82,-97.04],76177:[32.98,-97.32],76179:[32.87,-97.40],76180:[32.84,-97.22],76182:[32.87,-97.19],76244:[32.90,-97.25],76247:[33.02,-97.27],76248:[32.90,-97.19]};
+function haversine(lat1,lng1,lat2,lng2){const R=3959;const dLat=(lat2-lat1)*Math.PI/180;const dLng=(lng2-lng1)*Math.PI/180;const a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)*Math.sin(dLng/2);return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a))}
+let zipCoords=null;
+
 function locSel(){return`<select class="h-select" onchange="fLoc=this.value;renderAll()"><option value="all" ${fLoc==='all'?'selected':''}>All Locations</option>${locations.filter(l=>liw.includes(l.id)).map(l=>`<option value="${l.id}" ${fLoc===l.id?'selected':''}>${l.name}</option>`).join('')}</select>`}
-function sortSel(){return`<select class="h-select" onchange="fSort=this.value;renderAll()"><option value="recommended" ${fSort==='recommended'?'selected':''}>Recommended</option><option value="rating" ${fSort==='rating'?'selected':''}>Top Rated</option><option value="price-low" ${fSort==='price-low'?'selected':''}>Price ↑</option><option value="price-high" ${fSort==='price-high'?'selected':''}>Price ↓</option></select>`}
+function sortSel(){return`<select class="h-select" onchange="fSort=this.value;renderAll()"><option value="recommended" ${fSort==='recommended'?'selected':''}>Recommended</option><option value="rating" ${fSort==='rating'?'selected':''}>Top Rated</option></select>`}
 function priceSel(){return`<select class="h-select" onchange="fPrice=this.value;renderAll()"><option value="all" ${fPrice==='all'?'selected':''}>Any Price</option><option value="under100" ${fPrice==='under100'?'selected':''}>Under $100</option><option value="100-125" ${fPrice==='100-125'?'selected':''}>$100–$125</option><option value="125-150" ${fPrice==='125-150'?'selected':''}>$125–$150</option><option value="over150" ${fPrice==='over150'?'selected':''}>$150+</option></select>`}
 function pgaTog(){return`<button class="h-toggle ${fPGA?'active':''}" onclick="fPGA=!fPGA;renderAll()"><span class="ck">${fPGA?ckSvg:''}</span>PGA Certified</button>`}
 
@@ -665,7 +709,7 @@ function renderFilters(){
   document.getElementById('hf').innerHTML=`${locSel()}${priceSel()}${sortSel()}${pgaTog()}<span class="h-count">${c} result${c!==1?'s':''}</span>`;
   const mLocSel=`<select onchange="fLoc=this.value;renderAll()"><option value="all" ${fLoc==='all'?'selected':''}>All Locations</option>${locations.filter(l=>liw.includes(l.id)).map(l=>`<option value="${l.id}" ${fLoc===l.id?'selected':''}>${l.name}</option>`).join('')}</select>`;
   const mPriceSel=`<select onchange="fPrice=this.value;renderAll()"><option value="all" ${fPrice==='all'?'selected':''}>Any Price</option><option value="under100" ${fPrice==='under100'?'selected':''}>Under $100</option><option value="100-125" ${fPrice==='100-125'?'selected':''}>$100–$125</option><option value="125-150" ${fPrice==='125-150'?'selected':''}>$125–$150</option><option value="over150" ${fPrice==='over150'?'selected':''}>$150+</option></select>`;
-  const mSortSel=`<select onchange="fSort=this.value;renderAll()"><option value="recommended" ${fSort==='recommended'?'selected':''}>Recommended</option><option value="rating" ${fSort==='rating'?'selected':''}>Top Rated</option><option value="price-low" ${fSort==='price-low'?'selected':''}>Price ↑</option><option value="price-high" ${fSort==='price-high'?'selected':''}>Price ↓</option></select>`;
+  const mSortSel=`<select onchange="fSort=this.value;renderAll()"><option value="recommended" ${fSort==='recommended'?'selected':''}>Recommended</option><option value="rating" ${fSort==='rating'?'selected':''}>Top Rated</option></select>`;
   const mPgaTog=`<button class="${fPGA?'active':''}" onclick="fPGA=!fPGA;renderAll()"><span class="ck">${fPGA?ckSvg:''}</span>PGA Certified</button>`;
   document.getElementById('mf').innerHTML=`<div class="mf-row">${mLocSel}${mPriceSel}${mSortSel}${mPgaTog}</div>`;
 }
@@ -676,7 +720,7 @@ function renderCards(){
   const hF=`<svg viewBox="0 0 24 24" fill="var(--brand)" stroke="var(--brand)" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>`;
   const hE=`<svg viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>`;
   const dayLetters=['M','T','W','T','F','S','S'];
-  el.innerHTML=`<div class="list-header"><div class="list-title">${sq?'Search Results':'Instructors'}</div><div class="list-sub">${f.length} coach${f.length!==1?'es':''} across ${locations.length} venues in DFW</div></div><div class="cards">${f.map(i=>{const loc=gL(i.lid);const s=sel===i.id?' selected':'';const faved=favs.has(i.id);const sched=i.sched||{};const availDays=DAYS.map((d,idx)=>`<div class="card-day${sched[d]&&sched[d].length?' avail':''}">${dayLetters[idx]}</div>`).join('');return`<div class="card${s}" id="card-${i.id}" onclick="showProfile('${i.id}')"><button class="fav-btn" onclick="togFav('${i.id}',event)" title="${faved?'Remove from saved':'Save coach'}">${faved?hF:hE}</button><div class="card-body"><img class="card-photo" src="${i.photo}"><div class="card-info"><div class="card-top"><div class="card-name">${i.name}</div><div class="card-price">$${i.price}<span>/hr</span></div></div><div class="card-meta"><span class="card-location">${pSvg} ${loc.name}</span><span class="card-rating"><span class="stars">${rs(i.rating)}</span> <span class="num">${i.rating}</span> <span class="reviews">(${i.revs})</span></span></div><div class="card-bio">${i.bio}</div></div></div><div class="card-footer"><div class="badges">${i.demo?'<span class="demo-tag">Example</span>':''}${i.pga?'<span class="badge badge-pga">PGA Certified</span>':''}<span class="badge badge-exp">${i.yrs}+ YRS</span></div><div class="card-days">${availDays}</div></div></div>`}).join('')}</div>`;
+  el.innerHTML=`<div class="list-header"><div class="list-title">${sq&&/^\d{5}$/.test(sq.trim())?'Coaches Near '+sq.trim():sq?'Search Results':'Instructors'}</div><div class="list-sub">${f.length} coach${f.length!==1?'es':''} across ${locations.length} venues in DFW</div></div><div class="cards">${f.map(i=>{const loc=gL(i.lid);const s=sel===i.id?' selected':'';const faved=favs.has(i.id);const sched=i.sched||{};const availDays=DAYS.map((d,idx)=>`<div class="card-day${sched[d]&&sched[d].length?' avail':''}">${dayLetters[idx]}</div>`).join('');const distTxt=i.dist?`<span style="font-size:11px;color:var(--brand);font-weight:600;margin-left:4px">${Math.round(i.dist*10)/10} mi</span>`:'';return`<div class="card${s}" id="card-${i.id}" onclick="showProfile('${i.id}')"><button class="fav-btn" onclick="togFav('${i.id}',event)" title="${faved?'Remove from saved':'Save coach'}">${faved?hF:hE}</button><div class="card-body"><img class="card-photo" src="${i.photo}"><div class="card-info"><div class="card-top"><div class="card-name">${i.name}</div><div class="card-price">$${i.price}<span>/hr</span></div></div><div class="card-meta"><span class="card-location">${pSvg} ${loc.name}${distTxt}</span><span class="card-rating"><span class="stars">${rs(i.rating)}</span> <span class="num">${i.rating}</span> <span class="reviews">(${i.revs})</span></span></div><div class="card-bio">${i.bio}</div></div></div><div class="card-footer"><div class="badges">${i.demo?'<span class="demo-tag">Example</span>':''}${i.pga?'<span class="badge badge-pga">PGA Certified</span>':''}<span class="badge badge-exp">${i.yrs}+ YRS</span></div><div class="card-days">${availDays}</div></div></div>`}).join('')}</div>`;
 }
 function renderAll(){renderFilters();renderCards();const sc=document.getElementById('s-clear');if(sc)sc.style.display=sq?'flex':'none'}
 function cardClick(id){const i=instructors.find(x=>x.id===id);const loc=gL(i.lid);sel=id;renderAll();map.flyTo([loc.lat,loc.lng],13,{duration:.8});setTimeout(()=>openPop(loc.id),400)}
@@ -694,46 +738,92 @@ function showProfile(id){
   const reviewsHTML=revs.length?`<div class="st" style="margin-top:18px">Student Reviews <span style="font-weight:400;color:var(--text-muted)">(${revs.length})</span></div>${revs.map(r=>`<div class="rev-card"><div class="rev-stars">${'★'.repeat(r.r)}${'☆'.repeat(5-r.r)}</div><div class="rev-text">${r.t}</div><div class="rev-author">— ${r.n}</div></div>`).join('')}`:'';
   mr.innerHTML=`<div class="mo" onclick="cM()"><div class="md" onclick="event.stopPropagation()"><div class="ph"><button class="cb" onclick="cM()">✕</button><img src="${i.photo}"><div class="nm">${i.name}</div><div class="lc">${pSvg} ${loc.name}, ${loc.city}</div><div class="rt"><span class="stars">${rs(i.rating)}</span><span class="n">${i.rating}</span><span class="rv">(${i.revs} reviews)</span></div><div class="pr">$${i.price}<span>/hr</span></div></div><div class="pb"><div class="badges">${i.demo?'<span class="demo-tag">Example Profile</span>':''}${i.pga?'<span class="badge badge-pga">PGA Certified</span>':''}<span class="badge badge-exp">${i.yrs}+ YEARS</span><span class="badge badge-lessons">${i.lessons} LESSONS</span></div><div class="st">About</div><div class="ab">${i.full}</div><div class="st" style="margin-top:18px">Specialties</div><div class="specs">${i.specs.map(s=>`<span class="spec">${s}</span>`).join('')}</div>${reviewsHTML}<button class="btn btn-outline" style="width:100%;margin-top:14px;padding:10px" onclick="event.stopPropagation();showReviewForm('${i.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:6px"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>Leave a Review</button>${schedDays?`<div class="st" style="margin-top:18px">Availability</div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">${schedDays}</div>`:''}${i.demo?`<button class="pcta" style="background:var(--gold);color:var(--brand-dark)" onclick="showWaitlist('${i.id}')">Join the Waitlist</button>`:`<button class="pcta" onclick="showBooking('${i.id}')">Book a Lesson with ${i.name.split(' ')[0]}</button>`}</div></div></div>`;
 }
-let bkDay=null,bkSlot=null,bkOpen=false;
+let bkDay=null,bkSlot=null,bkOpen=false,bkDate=null,bkMonth=null,bkYear=null;
 const DAYS=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const MNAMES=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DOW_MAP=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
 function showBooking(id){
-  bkDay=null;bkSlot=null;bkOpen=false;
+  bkDay=null;bkSlot=null;bkDate=null;bkOpen=false;
+  const now=new Date();bkMonth=now.getMonth();bkYear=now.getFullYear();
   const i=instructors.find(x=>x.id===id);const loc=gL(i.lid);lS();
   renderBooking(i,loc);
+}
+
+function buildCalendar(i,sched){
+  const today=new Date();today.setHours(0,0,0,0);
+  const first=new Date(bkYear,bkMonth,1);
+  const startDow=(first.getDay()+6)%7; // Mon=0
+  const daysInMonth=new Date(bkYear,bkMonth+1,0).getDate();
+  
+  let cells='';
+  // Empty cells before first day
+  for(let e=0;e<startDow;e++)cells+=`<div class="cal-day empty"></div>`;
+  
+  for(let d=1;d<=daysInMonth;d++){
+    const dt=new Date(bkYear,bkMonth,d);
+    const dow=DOW_MAP[dt.getDay()]; // Sun,Mon,etc
+    const slots=sched[dow]||[];
+    const hasSlots=slots.length>0;
+    const isPast=dt<today;
+    const isToday=dt.getTime()===today.getTime();
+    const isPicked=bkDate&&bkDate.getTime()===dt.getTime();
+    
+    let cls='cal-day';
+    if(isPast)cls+=' past';
+    if(isToday)cls+=' today';
+    if(hasSlots&&!isPast)cls+=' has-slots';
+    if(isPicked)cls+=' picked';
+    
+    if(hasSlots&&!isPast){
+      cells+=`<div class="${cls}" onclick="pickDate(${bkYear},${bkMonth},${d},'${i.id}')">${d}</div>`;
+    } else {
+      cells+=`<div class="${cls}">${d}</div>`;
+    }
+  }
+  return cells;
+}
+
+function pickDate(y,m,d,id){
+  bkDate=new Date(y,m,d);
+  bkDay=DOW_MAP[bkDate.getDay()];
+  bkSlot=null;
+  renderBooking(instructors.find(x=>x.id===id));
+}
+
+function calNav(dir,id){
+  bkMonth+=dir;
+  if(bkMonth>11){bkMonth=0;bkYear++}
+  if(bkMonth<0){bkMonth=11;bkYear--}
+  bkDate=null;bkDay=null;bkSlot=null;
+  renderBooking(instructors.find(x=>x.id===id));
 }
 
 function renderBooking(i,loc){
   if(!loc)loc=gL(i.lid);
   const sched=i.sched||{};
   
-  // Day picker
-  let dayPickerHTML=DAYS.map(d=>{
-    const slots=sched[d]||[];
-    const hasSlots=slots.length>0;
-    const isActive=bkDay===d;
-    return`<div class="day-btn ${isActive?'active':''} ${!hasSlots?'disabled':''}" onclick="${hasSlots?`bkDay='${d}';bkSlot=null;renderBooking(instructors.find(x=>x.id==='${i.id}'))`:''}" ${!hasSlots?'title="Not available"':''}>
-      <div class="day-name">${d}</div>
-      <div class="day-count">${hasSlots?slots.length+' slot'+(slots.length>1?'s':''):'—'}</div>
-    </div>`;
-  }).join('');
+  // Monthly calendar
+  const calCells=buildCalendar(i,sched);
+  const calHTML=`<div class="cal-header"><div class="cal-title">${MNAMES[bkMonth]} ${bkYear}</div><div class="cal-nav"><button onclick="calNav(-1,'${i.id}')">‹</button><button onclick="calNav(1,'${i.id}')">›</button></div></div><div class="cal-grid"><div class="cal-dow">Mon</div><div class="cal-dow">Tue</div><div class="cal-dow">Wed</div><div class="cal-dow">Thu</div><div class="cal-dow">Fri</div><div class="cal-dow">Sat</div><div class="cal-dow">Sun</div>${calCells}</div>`;
 
-  // Slot grid (only if day is selected)
+  // Slot grid (only if date is selected)
   let slotHTML='';
   if(bkDay&&sched[bkDay]){
-    slotHTML=`<div class="slot-grid">${sched[bkDay].map(s=>`<div class="slot-btn ${bkSlot===s?'picked':''}" onclick="bkSlot='${s}';renderBooking(instructors.find(x=>x.id==='${i.id}'))">${s}</div>`).join('')}</div>`;
-  } else if(bkDay){
-    slotHTML=`<div class="slot-empty">No slots available on ${bkDay}</div>`;
+    const dateStr=MNAMES[bkDate.getMonth()]+' '+bkDate.getDate();
+    slotHTML=`<div class="sched-label" style="margin-top:4px">${dateStr} — Pick a Time</div><div class="slot-grid">${sched[bkDay].map(s=>`<div class="slot-btn ${bkSlot===s?'picked':''}" onclick="bkSlot='${s}';renderBooking(instructors.find(x=>x.id==='${i.id}'))">${s}</div>`).join('')}</div>`;
   }
 
   // Selected slot display
   let selectedHTML='';
-  if(bkDay&&bkSlot){
-    selectedHTML=`<div class="selected-slot"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>${bkDay} at ${bkSlot}<span class="change" onclick="bkSlot=null;renderBooking(instructors.find(x=>x.id==='${i.id}'))">Change</span></div>`;
+  if(bkDate&&bkSlot){
+    const fullDate=MNAMES[bkDate.getMonth()]+' '+bkDate.getDate()+', '+bkDate.getFullYear();
+    selectedHTML=`<div class="selected-slot"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>${fullDate} at ${bkSlot}<span class="change" onclick="bkSlot=null;renderBooking(instructors.find(x=>x.id==='${i.id}'))">Change</span></div>`;
   }
 
   const bkAnim=bkOpen?' no-anim':'';
   bkOpen=true;
+  const confirmTxt=bkDate&&bkSlot?'Confirm '+MNAMES[bkDate.getMonth()]+' '+bkDate.getDate()+' at '+bkSlot:'Select a date and time to continue';
 
   mr.innerHTML=`<div class="mo${bkAnim}" onclick="cM()"><div class="md" onclick="event.stopPropagation()">
     <div class="bh"><div><div class="bt">Book a Lesson</div><div class="bs">with ${i.name} at ${loc.name}</div></div><button class="cb" style="position:static" onclick="cM()">✕</button></div>
@@ -741,9 +831,8 @@ function renderBooking(i,loc){
       <div class="iprev"><img src="${i.photo}"><div><div class="nm">${i.name}</div><div class="dt">$${i.price}/hr · ${rs(i.rating)} ${i.rating}</div></div></div>
 
       <div class="sched-wrap">
-        <div class="sched-label">Select a Day</div>
-        <div class="day-picker">${dayPickerHTML}</div>
-        ${bkDay&&!bkSlot?'<div class="sched-label" style="margin-top:4px">Pick a Time</div>':''}
+        <div class="sched-label">Choose a Date</div>
+        ${calHTML}
         ${slotHTML}
         ${selectedHTML}
       </div>
@@ -753,26 +842,43 @@ function renderBooking(i,loc){
       <div class="fl"><label>Phone</label><input id="bp" type="tel" placeholder="(214) 555-0123"></div>
       <div class="fl"><label>Skill Level</label><select id="bsk"><option>Beginner</option><option>Intermediate</option><option>Advanced</option></select></div>
       <button class="sbtn" onclick="subBook('${i.id}')" ${!bkSlot?'style="opacity:.5;cursor:not-allowed" disabled':''}>
-        ${bkSlot?'Confirm '+bkDay+' at '+bkSlot:'Select a time slot to continue'}
+        ${confirmTxt}
       </button>
     </div>
   </div></div>`;
 }
 
+// ══════════════════════════════════════
+// FORMSPREE INTEGRATION
+// ══════════════════════════════════════
+const FS_BOOKING='https://formspree.io/f/mzdybeje';
+const FS_COACH='https://formspree.io/f/xeevqapg';
+const FS_WAITLIST='https://formspree.io/f/xgoreapz';
+async function sendForm(url,data){
+  try{
+    const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(data)});
+    return res.ok;
+  }catch(e){console.error('Form error:',e);return false}
+}
+
 function subBook(id){
   const i=instructors.find(x=>x.id===id);const loc=gL(i.lid);
-  if(!bkDay||!bkSlot){alert('Please select a day and time slot.');return}
+  if(!bkDate||!bkSlot){alert('Please select a date and time slot.');return}
   const bn=document.getElementById('bn').value.trim(),be=document.getElementById('be').value.trim(),bp=document.getElementById('bp').value.trim(),bsk=document.getElementById('bsk').value;
   if(!bn||!be||!bp){alert('Please fill in your name, email, and phone.');return}
-  const data={instructor:i.name,location:loc.name,day:bkDay,time:bkSlot,name:bn,email:be,phone:bp,skillLevel:bsk};
-  console.log('📩 Booking:',data);
+  const fullDate=MNAMES[bkDate.getMonth()]+' '+bkDate.getDate()+', '+bkDate.getFullYear();
 
-  const em='hel'+'lo'+'@'+'swing'+'scout'+'.com';
-  const subj=encodeURIComponent('Lesson Request: '+bn+' → '+i.name+' ('+bkDay+' '+bkSlot+')');
-  const body=encodeURIComponent('New Lesson Request\n\nStudent: '+bn+'\nEmail: '+be+'\nPhone: '+bp+'\nSkill Level: '+bsk+'\n\nInstructor: '+i.name+'\nLocation: '+loc.name+'\nRequested Time: '+bkDay+' at '+bkSlot+'\n\nPrice: $'+i.price+'/hr');
-  const mailto='mai'+'lto:'+em+'?subject='+subj+'&body='+body;
+  // Show loading state
+  document.querySelector('.sbtn').textContent='Sending...';
+  document.querySelector('.sbtn').disabled=true;
 
-  mr.innerHTML=`<div class="mo" onclick="cM()"><div class="md" onclick="event.stopPropagation()"><div class="bh"><div><div class="bt">Request Sent!</div></div><button class="cb" style="position:static" onclick="cM()">✕</button></div><div class="suc"><div class="suc-ic"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div><h3>You're all set!</h3><p>Lesson requested with ${i.name} on <strong>${bkDay} at ${bkSlot}</strong> at ${loc.name}.</p><a href="${mailto}" class="dbtn" style="display:inline-block;text-decoration:none;margin-top:20px">Send Confirmation Email</a><p style="font-size:12px;color:var(--text-muted);margin-top:12px">Click above to send the request via email. We'll connect you with ${i.name.split(' ')[0]} shortly.</p><button class="dbtn" onclick="cM()" style="background:var(--surface);color:var(--text-secondary);margin-top:8px;border:1px solid var(--border)">Close</button></div></div></div>`;
+  sendForm(FS_BOOKING,{_type:'Booking Request',student_name:bn,student_email:be,student_phone:bp,skill_level:bsk,instructor:i.name,location:loc.name,date:fullDate,time:bkSlot,price:'$'+i.price+'/hr'}).then(ok=>{
+    if(ok){
+      mr.innerHTML=`<div class="mo" onclick="cM()"><div class="md" onclick="event.stopPropagation()"><div class="bh"><div><div class="bt">Request Sent!</div></div><button class="cb" style="position:static" onclick="cM()">✕</button></div><div class="suc"><div class="suc-ic"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div><h3>You're all set!</h3><p>Lesson requested with ${i.name} on <strong>${fullDate} at ${bkSlot}</strong> at ${loc.name}.</p><p style="font-size:13px;color:var(--text-secondary);margin-top:12px">We'll connect you with ${i.name.split(' ')[0]} shortly. Check your email for confirmation.</p><button class="dbtn" onclick="cM()">Done</button></div></div></div>`;
+    } else {
+      alert('Something went wrong. Please try again.');
+    }
+  });
 }
 
 // ══════════════════════════════════════
@@ -917,26 +1023,23 @@ function cpNext(){
 
 function cpSubmit(){
   const loc=locations.find(l=>l.id===cp.locId);
-  const data={name:cp.firstName+' '+cp.lastName,email:cp.email,phone:cp.phone,instagram:cp.instagram,pga:cp.pga,years:cp.yrs,shortBio:cp.shortBio,fullBio:cp.fullBio,specialties:cp.specs,location:loc?loc.name:'Other',price:'$'+cp.price+'/hr',schedule:cp.sched};
-  console.log('🏌️ Coach profile submitted:',data);
+  const schedText=Object.entries(cp.sched).filter(([,s])=>s.length).map(([d,s])=>d+': '+s.join(', ')).join(' | ')||'Not set';
 
-  const schedText=Object.entries(cp.sched).filter(([,s])=>s.length).map(([d,s])=>d+': '+s.join(', ')).join('\n')||'Not set';
-  const subject=encodeURIComponent('New Coach Application: '+data.name);
-  const body=encodeURIComponent('Coach Application\n\nName: '+data.name+'\nEmail: '+data.email+'\nPhone: '+data.phone+'\nInstagram: '+(data.instagram||'N/A')+'\nPGA Certified: '+(data.pga?'Yes':'No')+'\nExperience: '+data.years+' years\nLocation: '+data.location+'\nRate: '+data.price+'\nSpecialties: '+data.specialties.join(', ')+'\n\nWeekly Availability:\n'+schedText+'\n\nShort Bio:\n'+data.shortBio+'\n\nFull Bio:\n'+data.fullBio);
-  const em='hel'+'lo'+'@'+'swing'+'scout'+'.com';
-  const mailto='mai'+'lto:'+em+'?subject='+subject+'&body='+body;
-
-  mr.innerHTML=`<div class="mo" onclick="cM()"><div class="md cpb-modal" onclick="event.stopPropagation()">
-    <div class="bh"><div><div class="bt">Application Ready!</div></div><button class="cb" style="position:static" onclick="cM()">✕</button></div>
-    <div class="suc">
-      <div class="suc-ic"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>
-      <h3>Welcome, ${cp.firstName}!</h3>
-      <p>Your profile is ready. Click below to send your application — it will open your email with everything pre-filled.</p>
-      <a href="${mailto}" class="dbtn" style="display:inline-block;text-decoration:none;margin-top:20px">Send Application via Email</a>
-      <p style="font-size:12px;color:var(--text-muted);margin-top:16px">We'll review your profile and get back to you within 48 hours.</p>
-      <button class="dbtn" onclick="cM()" style="background:var(--surface);color:var(--text-secondary);margin-top:8px;border:1px solid var(--border)">Close</button>
-    </div>
-  </div></div>`;
+  sendForm(FS_COACH,{_type:'Coach Application',name:cp.firstName+' '+cp.lastName,email:cp.email,phone:cp.phone,instagram:cp.instagram||'N/A',pga_certified:cp.pga?'Yes':'No',experience:cp.yrs+' years',location:loc?loc.name:'Other',rate:'$'+cp.price+'/hr',specialties:cp.specs.join(', '),availability:schedText,short_bio:cp.shortBio,full_bio:cp.fullBio}).then(ok=>{
+    if(ok){
+      mr.innerHTML=`<div class="mo" onclick="cM()"><div class="md cpb-modal" onclick="event.stopPropagation()">
+        <div class="bh"><div><div class="bt">Application Submitted!</div></div><button class="cb" style="position:static" onclick="cM()">✕</button></div>
+        <div class="suc">
+          <div class="suc-ic"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>
+          <h3>Welcome, ${cp.firstName}!</h3>
+          <p>Your application has been submitted. Our team will review your profile and get back to you within 48 hours.</p>
+          <button class="dbtn" onclick="cM()" style="margin-top:20px">Done</button>
+        </div>
+      </div></div>`;
+    } else {
+      alert('Something went wrong submitting your application. Please try again.');
+    }
+  });
 }
 
 // ══════════════════════════════════════
@@ -954,9 +1057,9 @@ function showAbout(){
   showLegal('About SwingScout',`
     <p style="font-size:16px;color:var(--text);font-weight:600;margin-bottom:16px">The easiest way to find golf instruction in Dallas–Fort Worth.</p>
     <p>SwingScout was built to solve a simple problem: finding a great golf instructor shouldn't be hard. Whether you're picking up a club for the first time or grinding to break 80, the right coach makes all the difference — but discovering who teaches where, what they charge, and whether they're actually good has always been a fragmented, word-of-mouth process.</p>
-    <p style="margin-top:14px">We built SwingScout to change that. Our platform maps every golf venue across the DFW metroplex and connects students with vetted, experienced instructors at the courses and ranges where they actually teach. No middlemen, no platform fees — just a direct connection between you and your next coach.</p>
+    <p style="margin-top:14px">We built SwingScout to change that. Our platform maps every golf venue across the DFW metroplex and connects students with vetted, experienced instructors at the courses and ranges where they actually teach. A direct connection between you and your next coach.</p>
     <p style="margin-top:14px">SwingScout is based in Dallas, Texas and is currently focused on the Dallas–Fort Worth area with plans to expand to other Texas metros.</p>
-    <p style="margin-top:20px;font-size:13px;color:var(--text-muted)">Have questions? Reach out at <a onclick="window.location=\\'mai\\'+\\'lto:\\'+\\'hello\\'+\\'@\\'+\\'swing\\'+\\'scout.com\\'" style="color:var(--brand);cursor:pointer;text-decoration:underline">hello at swingscout.com</a></p>
+    <p style="margin-top:20px;font-size:13px;color:var(--text-muted)">Have questions? Reach out at hello at swingscoutgolf.com</p>
   `);
 }
 
@@ -978,7 +1081,7 @@ function showPrivacy(){
     <p style="margin-top:14px"><strong style="color:var(--text)">7. Changes to This Policy</strong></p>
     <p>We may update this Privacy Policy from time to time. We will notify users of any material changes by posting the updated policy on our website.</p>
     <p style="margin-top:14px"><strong style="color:var(--text)">8. Contact</strong></p>
-    <p>If you have questions about this Privacy Policy, contact us at hello at swingscout.com.</p>
+    <p>If you have questions about this Privacy Policy, contact us at hello at swingscoutgolf.com.</p>
   `);
 }
 
@@ -1002,8 +1105,44 @@ function showTerms(){
     <p style="margin-top:14px"><strong style="color:var(--text)">8. Changes</strong></p>
     <p>We may modify these terms at any time. Continued use of SwingScout after changes constitutes acceptance of the updated terms.</p>
     <p style="margin-top:14px"><strong style="color:var(--text)">9. Contact</strong></p>
-    <p>Questions about these Terms? Contact us at hello at swingscout.com.</p>
+    <p>Questions about these Terms? Contact us at hello at swingscoutgolf.com.</p>
   `);
+}
+
+// ══════════════════════════════════════
+// CONTACT FORM
+// ══════════════════════════════════════
+function showContact(){
+  lS();
+  mr.innerHTML=`<div class="mo" onclick="cM()"><div class="md" style="max-width:460px" onclick="event.stopPropagation()">
+    <div class="bh"><div><div class="bt">Contact SwingScout</div><div class="bs">Questions, feedback, or partnership inquiries</div></div><button class="cb" style="position:static" onclick="cM()">✕</button></div>
+    <div class="bf">
+      <div class="fl"><label>Your Name</label><input id="ct-name" placeholder="John Smith"></div>
+      <div class="fl"><label>Email</label><input id="ct-email" type="email" placeholder="your email address"></div>
+      <div class="fl"><label>Subject</label><select id="ct-subj"><option>General Question</option><option>Feedback</option><option>Partnership Inquiry</option><option>Bug Report</option><option>Other</option></select></div>
+      <div class="fl"><label>Message</label><textarea id="ct-msg" rows="5" placeholder="How can we help?"></textarea></div>
+      <button class="sbtn" onclick="submitContact()">Send Message</button>
+    </div>
+  </div></div>`;
+}
+
+function submitContact(){
+  const name=document.getElementById('ct-name').value.trim();
+  const email=document.getElementById('ct-email').value.trim();
+  const subj=document.getElementById('ct-subj').value;
+  const msg=document.getElementById('ct-msg').value.trim();
+  if(!name||!email||!msg){alert('Please fill in all fields.');return}
+
+  document.querySelector('.sbtn').textContent='Sending...';
+  document.querySelector('.sbtn').disabled=true;
+
+  sendForm(FS_BOOKING,{_type:'Contact Message',name,email,subject:subj,message:msg}).then(ok=>{
+    if(ok){
+      mr.innerHTML=`<div class="mo" onclick="cM()"><div class="md" style="max-width:460px" onclick="event.stopPropagation()"><div class="bh"><div><div class="bt">Message Sent!</div></div><button class="cb" style="position:static" onclick="cM()">✕</button></div><div class="suc"><div class="suc-ic"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div><h3>Thanks, ${name}!</h3><p>We've received your message and will get back to you within 24 hours.</p><button class="dbtn" onclick="cM()" style="margin-top:16px">Done</button></div></div></div>`;
+    } else {
+      alert('Something went wrong. Please try again.');
+    }
+  });
 }
 
 // ══════════════════════════════════════
@@ -1030,14 +1169,17 @@ function submitWaitlist(id){
   const email=document.getElementById('wl-email').value.trim();
   const level=document.getElementById('wl-level').value;
   if(!name||!email){alert('Please enter your name and email.');return}
-  console.log('📋 Waitlist signup:',{name,email,level,interestedIn:i.name});
 
-  const em='hel'+'lo'+'@'+'swing'+'scout'+'.com';
-  const subj=encodeURIComponent('Waitlist Signup: '+name+' interested in '+i.name);
-  const body=encodeURIComponent('Waitlist Signup\n\nStudent: '+name+'\nEmail: '+email+'\nLooking for: '+level+'\nInterested in: '+i.name+'\nLocation: '+gL(i.lid).name);
-  const mailto='mai'+'lto:'+em+'?subject='+subj+'&body='+body;
+  document.querySelector('.sbtn').textContent='Sending...';
+  document.querySelector('.sbtn').disabled=true;
 
-  mr.innerHTML=`<div class="mo" onclick="cM()"><div class="md" style="max-width:460px" onclick="event.stopPropagation()"><div class="bh"><div><div class="bt">You're on the list!</div></div><button class="cb" style="position:static" onclick="cM()">✕</button></div><div class="suc"><div class="suc-ic"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div><h3>Thanks, ${name}!</h3><p>We'll email you at <strong>${email}</strong> as soon as coaches are available to book in your area.</p><a href="${mailto}" class="dbtn" style="display:inline-block;text-decoration:none;margin-top:16px">Send Confirmation Email</a><button class="dbtn" onclick="cM()" style="background:var(--surface);color:var(--text-secondary);margin-top:8px;border:1px solid var(--border)">Close</button></div></div></div>`;
+  sendForm(FS_WAITLIST,{_type:'Waitlist Signup',name,email,looking_for:level,interested_in:i.name,location:gL(i.lid).name}).then(ok=>{
+    if(ok){
+      mr.innerHTML=`<div class="mo" onclick="cM()"><div class="md" style="max-width:460px" onclick="event.stopPropagation()"><div class="bh"><div><div class="bt">You're on the list!</div></div><button class="cb" style="position:static" onclick="cM()">✕</button></div><div class="suc"><div class="suc-ic"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div><h3>Thanks, ${name}!</h3><p>We'll email you at <strong>${email}</strong> as soon as coaches are available to book in your area.</p><button class="dbtn" onclick="cM()" style="margin-top:16px">Done</button></div></div></div>`;
+    } else {
+      alert('Something went wrong. Please try again.');
+    }
+  });
 }
 
 // ══════════════════════════════════════
