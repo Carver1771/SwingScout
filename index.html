@@ -14,7 +14,7 @@
 <meta name="twitter:title" content="Swingable Golf — Find Golf Instructors in DFW">
 <meta name="twitter:description" content="Browse top-rated golf coaches across 70+ venues in Dallas–Fort Worth.">
 <meta name="theme-color" content="#14442b">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23c9a84c'/><path d='M50 25v50M35 35l15-15 15 15' stroke='%2314442b' stroke-width='8' stroke-linecap='round' stroke-linejoin='round' fill='none'/></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 120'><path d='M50 2C25 2 5 22 5 47c0 33 45 70 45 70s45-37 45-70C95 22 75 2 50 2z' fill='%23c9a84c'/><rect x='42' y='26' width='5' height='42' rx='2' fill='white'/><path d='M47 26l24 11-24 11z' fill='white'/><circle cx='55' cy='76' r='7' fill='white'/></svg>">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-K52H2K3TNQ"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-K52H2K3TNQ');</script>
@@ -38,7 +38,7 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:#fafaf8;color:#1a1a1a
 .header{position:sticky;top:0;z-index:1000;background:var(--brand-dark);color:#fff;box-shadow:0 2px 20px rgba(0,0,0,.15)}
 .header-inner{display:flex;align-items:center;gap:14px;padding:0 20px;height:56px}
 .logo-group{display:flex;align-items:center;gap:9px;cursor:pointer;flex-shrink:0}
-.logo-icon{width:28px;height:28px;border-radius:6px;background:var(--gold);display:flex;align-items:center;justify-content:center}
+.logo-icon{width:28px;height:28px;display:flex;align-items:center;justify-content:center}
 .logo-text{font-family:'Libre Baskerville',Georgia,serif;font-size:19px;font-weight:700;color:#fff;letter-spacing:-.3px}
 .header-divider{width:1px;height:28px;background:rgba(255,255,255,.15);flex-shrink:0}
 .header-search{flex:1;max-width:340px;position:relative}
@@ -68,7 +68,7 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:#fafaf8;color:#1a1a1a
   .header-search{order:10;max-width:100%;flex-basis:100%}
   .header-filters,.header-divider{display:none}
   .nav-links{display:none}
-  .nav-links.open{display:flex;position:absolute;top:100%;left:0;right:0;background:var(--brand-dark);flex-direction:column;padding:8px 14px 14px;border-top:1px solid rgba(255,255,255,.1);box-shadow:0 8px 24px rgba(0,0,0,.2);z-index:1000}
+  .nav-links.open{display:flex;position:absolute;top:100%;left:0;right:0;background:var(--brand-dark);flex-direction:column;padding:8px 14px 14px;border-top:1px solid rgba(255,255,255,.1);box-shadow:0 8px 24px rgba(0,0,0,.2);z-index:2000}
   .nav-links.open .nav-link{padding:12px 14px;width:100%;text-align:left;font-size:14px}
   .hamburger{display:flex}
 }
@@ -440,7 +440,7 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:#fafaf8;color:#1a1a1a
 <body>
 <header class="header"><div class="header-inner">
   <div class="logo-group" onclick="window.scrollTo({top:0,behavior:'smooth'})">
-    <div class="logo-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#14442b" stroke-width="3" stroke-linecap="round"><path d="M12 18V6M8 10l4-4 4 4"/></svg></div>
+    <div class="logo-icon"><svg width="24" height="30" viewBox="0 0 100 120" fill="none"><path d="M50 2C25 2 5 22 5 47c0 33 45 70 45 70s45-37 45-70C95 22 75 2 50 2z" fill="#c9a84c"/><rect x="42" y="26" width="5" height="42" rx="2" fill="white"/><path d="M47 26l24 11-24 11z" fill="white"/><circle cx="55" cy="76" r="7" fill="white"/></svg></div>
     <span class="logo-text">Swingable Golf</span>
   </div>
   <div class="header-divider"></div>
@@ -885,13 +885,13 @@ function subBook(id){
 // COACH PROFILE BUILDER
 // ══════════════════════════════════════
 let cpStep=1;
-let cp={firstName:'',lastName:'',email:'',phone:'',instagram:'',photoPreview:'',pga:false,yrs:'',shortBio:'',fullBio:'',specs:[],locId:'',price:'',avail:'',sched:{}};
+let cp={firstName:'',lastName:'',email:'',phone:'',instagram:'',photoPreview:'',pga:false,yrs:'',shortBio:'',fullBio:'',specs:[],locId:'',otherLocName:'',otherLocAddress:'',price:'',avail:'',sched:{}};
 const allSpecs=["Short Game","Swing Mechanics","Putting","Driving","Course Strategy","Mental Game","Beginners","Junior Golf","Women's Golf","Group Lessons","Video Analysis","TrackMan","Golf Fitness","Competition Prep","Slice Fixing","Corporate Events"];
 const TIMES=["6:00 AM","7:00 AM","8:00 AM","9:00 AM","10:00 AM","11:00 AM","12:00 PM","1:00 PM","2:00 PM","3:00 PM","4:00 PM","5:00 PM","6:00 PM","7:00 PM"];
 
 let cpbOpen=false;
 
-function showCoachSignup(){cpStep=0;cpbOpen=false;cp={firstName:'',lastName:'',email:'',phone:'',instagram:'',photoPreview:'',pga:false,yrs:'',shortBio:'',fullBio:'',specs:[],locId:'',price:'',avail:'',sched:{}};renderCPB()}
+function showCoachSignup(){cpStep=0;cpbOpen=false;cp={firstName:'',lastName:'',email:'',phone:'',instagram:'',photoPreview:'',pga:false,yrs:'',shortBio:'',fullBio:'',specs:[],locId:'',otherLocName:'',otherLocAddress:'',price:'',avail:'',sched:{}};renderCPB()}
 
 function renderCPB(){
   lS();
@@ -962,7 +962,9 @@ function renderCPB(){
 
     body=`<div class="cpb-step-title">Teaching Details & Availability</div>
     <div class="cpb-step-desc">Where you teach, your rate, and when students can book you.</div>
-    <div class="fl"><label>Primary Teaching Location</label><select onchange="cp.locId=this.value"><option value="" ${!cp.locId?'selected':''} disabled>Select a venue</option>${locations.map(l=>`<option value="${l.id}" ${cp.locId===l.id?'selected':''}>${l.name} — ${l.city}</option>`).join('')}<option value="other" ${cp.locId==='other'?'selected':''}>Other (not listed)</option></select></div>
+    <div class="fl"><label>Primary Teaching Location</label><select onchange="cp.locId=this.value;renderCPB()"><option value="" ${!cp.locId?'selected':''} disabled>Select a venue</option>${locations.map(l=>`<option value="${l.id}" ${cp.locId===l.id?'selected':''}>${l.name} — ${l.city}</option>`).join('')}<option value="other" ${cp.locId==='other'?'selected':''}>Other — My facility isn't listed</option></select></div>
+    ${cp.locId==='other'?`<div class="fl"><label>Facility Name</label><input value="${cp.otherLocName}" placeholder="e.g. Brookhaven Country Club" oninput="cp.otherLocName=this.value"></div>
+    <div class="fl"><label>Facility Address</label><input value="${cp.otherLocAddress}" placeholder="e.g. 3333 Golfing Green Dr, Dallas, TX 75234" oninput="cp.otherLocAddress=this.value"></div>`:''}
     <div class="field-row"><div class="fl"><label>Hourly Rate ($)</label><input type="number" min="25" max="500" value="${cp.price}" placeholder="120" oninput="cp.price=this.value"></div>
     <div class="fl"><label>Lesson Duration</label><select><option>60 minutes</option><option>90 minutes</option><option>45 minutes</option></select></div></div>
     <div class="sched-wrap">
@@ -978,7 +980,7 @@ function renderCPB(){
     <div class="preview-card"><div class="card-inner">
       <div class="photo-circle" style="width:54px;height:54px;border:2px solid var(--border-light)">${cp.photoPreview?`<img src="${cp.photoPreview}">`:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'}</div>
       <div class="card-info"><div class="card-top"><div class="card-name">${cp.firstName} ${cp.lastName}</div><div class="card-price">$${cp.price||'—'}<span>/hr</span></div></div>
-      <div class="card-meta"><span class="card-location">${pSvg} ${loc?loc.name:(cp.locId==='other'?'Custom Location':'—')}</span></div>
+      <div class="card-meta"><span class="card-location">${pSvg} ${loc?loc.name:(cp.locId==='other'?cp.otherLocName:'—')}</span></div>
       <div class="badges">${cp.pga?'<span class="badge badge-pga">PGA Certified</span>':''}<span class="badge badge-exp">${cp.yrs||'—'} YRS</span></div>
       <div class="card-bio">${cp.shortBio||'No short bio yet'}</div></div>
     </div></div>
@@ -986,7 +988,8 @@ function renderCPB(){
       <div class="review-item"><div class="rl">Email</div><div class="rv">${cp.email||'—'}</div></div>
       <div class="review-item"><div class="rl">Phone</div><div class="rv">${cp.phone||'—'}</div></div>
       <div class="review-item"><div class="rl">Instagram</div><div class="rv">${cp.instagram||'—'}</div></div>
-      <div class="review-item"><div class="rl">Availability</div><div class="rv">${Object.entries(cp.sched).filter(([,s])=>s.length).map(([d,s])=>d+' ('+s.length+')').join(', ')||'Not set'}</div></div>
+      ${cp.locId==='other'?`<div class="review-item"><div class="rl">Facility</div><div class="rv">${cp.otherLocName}</div></div>
+      <div class="review-item"><div class="rl">Address</div><div class="rv">${cp.otherLocAddress}</div></div>`:''}<div class="review-item"><div class="rl">Availability</div><div class="rv">${Object.entries(cp.sched).filter(([,s])=>s.length).map(([d,s])=>d+' ('+s.length+')').join(', ')||'Not set'}</div></div>
       <div class="review-item"><div class="rl">Specialties</div><div class="rv">${cp.specs.length?cp.specs.join(', '):'—'}</div></div>
     </div>
     ${cp.fullBio?`<div style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:4px">FULL BIO</div><div style="font-size:13px;color:var(--text-secondary);line-height:1.6;background:var(--surface);padding:12px;border-radius:8px;margin-bottom:8px">${cp.fullBio}</div>`:''}
@@ -1017,15 +1020,18 @@ function togAvail(day,time){if(!cp.sched[day])cp.sched[day]=[];const i=cp.sched[
 function cpNext(){
   if(cpStep===1){if(!cp.firstName.trim()||!cp.lastName.trim()||!cp.email.trim()||!cp.phone.trim()){alert('Please fill in all fields.');return}}
   else if(cpStep===2){if(!cp.yrs||!cp.shortBio.trim()||!cp.fullBio.trim()){alert('Please fill in experience, short bio, and full bio.');return}}
-  else if(cpStep===3){if(!cp.locId||!cp.price){alert('Please select a location and set your rate.');return}const totalSlots=Object.values(cp.sched).reduce((a,b)=>a+b.length,0);if(totalSlots===0){if(!confirm('You haven\'t set any availability slots. Students won\'t be able to pick a time. Continue anyway?'))return}}
+  else if(cpStep===3){if(!cp.locId||!cp.price){alert('Please select a location and set your rate.');return}if(cp.locId==='other'&&(!cp.otherLocName.trim()||!cp.otherLocAddress.trim())){alert('Please enter your facility name and address.');return}const totalSlots=Object.values(cp.sched).reduce((a,b)=>a+b.length,0);if(totalSlots===0){if(!confirm('You haven\'t set any availability slots. Students won\'t be able to pick a time. Continue anyway?'))return}}
   cpStep++;renderCPB();
 }
 
 function cpSubmit(){
   const loc=locations.find(l=>l.id===cp.locId);
+  const locName=cp.locId==='other'?cp.otherLocName:loc?loc.name:'Other';
   const schedText=Object.entries(cp.sched).filter(([,s])=>s.length).map(([d,s])=>d+': '+s.join(', ')).join(' | ')||'Not set';
+  const formData={_type:'Coach Application',name:cp.firstName+' '+cp.lastName,email:cp.email,phone:cp.phone,instagram:cp.instagram||'N/A',pga_certified:cp.pga?'Yes':'No',experience:cp.yrs+' years',location:locName,rate:'$'+cp.price+'/hr',specialties:cp.specs.join(', '),availability:schedText,short_bio:cp.shortBio,full_bio:cp.fullBio};
+  if(cp.locId==='other'){formData.custom_facility_name=cp.otherLocName;formData.custom_facility_address=cp.otherLocAddress}
 
-  sendForm(FS_COACH,{_type:'Coach Application',name:cp.firstName+' '+cp.lastName,email:cp.email,phone:cp.phone,instagram:cp.instagram||'N/A',pga_certified:cp.pga?'Yes':'No',experience:cp.yrs+' years',location:loc?loc.name:'Other',rate:'$'+cp.price+'/hr',specialties:cp.specs.join(', '),availability:schedText,short_bio:cp.shortBio,full_bio:cp.fullBio}).then(ok=>{
+  sendForm(FS_COACH,formData).then(ok=>{
     if(ok){
       mr.innerHTML=`<div class="mo" onclick="cM()"><div class="md cpb-modal" onclick="event.stopPropagation()">
         <div class="bh"><div><div class="bt">Application Submitted!</div></div><button class="cb" style="position:static" onclick="cM()">✕</button></div>
