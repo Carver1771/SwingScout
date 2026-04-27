@@ -19,6 +19,7 @@
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-K52H2K3TNQ"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-K52H2K3TNQ');</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -532,93 +533,15 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:#fafaf8;color:#1a1a1a
 <div id="mr"></div>
 
 <script>
-const L_=[ // id, name, lat, lng, city
-["stevens-park","Stevens Park Golf Course",32.7563,-96.847,"Dallas"],
-["tenison-park","Tenison Park Golf Course",32.7955,-96.7367,"Dallas"],
-["cedar-crest","Cedar Crest Golf Course",32.7227,-96.7969,"Dallas"],
-["keeton-park","Keeton Park Golf Course",32.7567,-96.706,"Dallas"],
-["luna-vista","Luna Vista Golf Course",32.8762,-96.8934,"Dallas"],
-["golf-club-dallas","Golf Club of Dallas",32.6808,-96.8505,"Dallas"],
-["lakewood","Lakewood Country Club",32.8141,-96.751,"Dallas"],
-["royal-oaks","Royal Oaks Country Club",32.8898,-96.7596,"Dallas"],
-["dallas-cc","Dallas Country Club",32.8159,-96.7936,"Dallas"],
-["dallas-national","Dallas National Golf Club",32.6723,-96.828,"Dallas"],
-["bent-tree","Bent Tree Country Club",32.9682,-96.8268,"Dallas"],
-["brook-hollow","Brook Hollow Golf Club",32.8615,-96.8445,"Dallas"],
-["northwood","Northwood Club",32.9426,-96.802,"Dallas"],
-["prestonwood","Prestonwood Country Club",32.9826,-96.8016,"Dallas"],
-["trinity-forest","Trinity Forest Golf Club",32.6704,-96.7544,"Dallas"],
-["dallas-athletic","Dallas Athletic Club",32.8962,-96.6514,"Dallas"],
-["firewheel","Firewheel Golf Park",32.9769,-96.6348,"Garland"],
-["sherrill-park","Sherrill Park Golf Course",32.9855,-96.6867,"Richardson"],
-["canyon-creek","Canyon Creek Country Club",32.9682,-96.6688,"Richardson"],
-["indian-creek","Indian Creek Golf Club",32.9988,-96.9328,"Carrollton"],
-["coyote-ridge","Coyote Ridge Golf Club",33.0032,-96.9064,"Carrollton"],
-["maridoe","Maridoe Golf Club",33.0024,-96.9316,"Carrollton"],
-["gleneagles","Gleneagles Country Club",33.0289,-96.8097,"Plano"],
-["ridgeview-ranch","Ridgeview Ranch Golf Club",33.1123,-96.7438,"Plano"],
-["watters-creek","The Courses at Watters Creek",33.0618,-96.7098,"Plano"],
-["stonebriar","Stonebriar Country Club",33.1186,-96.8368,"Frisco"],
-["fields-ranch","Fields Ranch (PGA Frisco)",33.2133,-96.8524,"Frisco"],
-["frisco-lakes","Frisco Lakes Golf Club",33.1728,-96.8946,"Frisco"],
-["tpc-craig","TPC Craig Ranch",33.1592,-96.7308,"McKinney"],
-["oak-hollow","Oak Hollow Golf Course",33.1916,-96.6582,"McKinney"],
-["eldorado","Eldorado Country Club",33.2126,-96.6752,"McKinney"],
-["heritage-ranch","Heritage Ranch Golf Club",33.1385,-96.594,"Fairview"],
-["topgolf-allen","Topgolf Allen",33.1231,-96.6586,"Allen"],
-["gentle-creek","Gentle Creek Country Club",33.2462,-96.804,"Prosper"],
-["the-tribute","The Tribute Golf Links",33.1009,-96.9328,"The Colony"],
-["old-american","Old American Golf Club",33.0815,-96.9152,"The Colony"],
-["topgolf-colony","Topgolf The Colony",33.0704,-96.8837,"The Colony"],
-["brookhaven","Brookhaven Country Club",32.9351,-96.8633,"Farmers Branch"],
-["buffalo-creek","Buffalo Creek Golf Club",32.8677,-96.4612,"Rockwall"],
-["lake-park","Lake Park Golf Course",33.0328,-96.9966,"Lewisville"],
-["bridlewood","Bridlewood Golf Club",33.0499,-97.0908,"Flower Mound"],
-["tour-18","Tour 18 Golf Course",33.0589,-97.1666,"Flower Mound"],
-["grapevine-gc","Grapevine Golf Course",32.9793,-97.0533,"Grapevine"],
-["cowboys-gc","Cowboys Golf Club",32.955,-97.0541,"Grapevine"],
-["las-colinas","Las Colinas Country Club",32.8616,-96.9471,"Irving"],
-["hackberry","Hackberry Creek Country Club",32.8964,-96.9542,"Irving"],
-["cottonwood","Cottonwood Valley Golf Club",32.8749,-96.9584,"Irving"],
-["bear-creek","Bear Creek Golf Club",32.8626,-97.0289,"DFW Airport"],
-["texas-star","Texas Star Golf Course",32.8185,-97.1143,"Euless"],
-["iron-horse","Iron Horse Golf Course",32.8359,-97.2544,"North Richland Hills"],
-["sky-creek","Sky Creek Ranch Golf Club",32.9124,-97.232,"Keller"],
-["fossil-creek","Fossil Creek Golf Club",32.8714,-97.2833,"Fort Worth"],
-["colonial","Colonial Country Club",32.716,-97.3725,"Fort Worth"],
-["shady-oaks","Shady Oaks Country Club",32.7746,-97.3822,"Fort Worth"],
-["river-crest","River Crest Country Club",32.7386,-97.3608,"Fort Worth"],
-["ridglea","Ridglea Country Club",32.7258,-97.3972,"Fort Worth"],
-["mira-vista","Mira Vista Country Club",32.6788,-97.4218,"Fort Worth"],
-["meadowbrook","Meadowbrook Golf Course",32.7513,-97.2428,"Fort Worth"],
-["rockwood","Rockwood Park Golf Course",32.7746,-97.3687,"Fort Worth"],
-["pecan-valley","Pecan Valley Golf Course",32.6595,-97.4465,"Fort Worth"],
-["waterchase","Waterchase Golf Club",32.7652,-97.1556,"Fort Worth"],
-["topgolf-dallas","Topgolf Dallas",32.8692,-96.7463,"Dallas"],
-["topgolf-fw","Topgolf Fort Worth",32.7626,-97.3155,"Fort Worth"],
-["topgolf-gp","Topgolf Grand Prairie",32.6861,-97.0215,"Grand Prairie"],
-["tangle-ridge","Tangle Ridge Golf Club",32.5635,-97.0132,"Grand Prairie"],
-["tierra-verde","Tierra Verde Golf Club",32.6263,-97.1858,"Arlington"],
-["texas-rangers","Texas Rangers Golf Club",32.7407,-97.0816,"Arlington"],
-["mansfield-nat","Mansfield National Golf Club",32.5614,-97.0802,"Mansfield"],
-["bigshots","BigShots Golf",33.0176,-97.285,"North Fort Worth"],
-["leonard-links","Leonard Golf Links",32.6876,-97.2688,"Fort Worth"],
-];
+// ══════════════════════════════════════
+// SUPABASE CONNECTION
+// ══════════════════════════════════════
+const SB_URL='https://quqknhjdjvdzqyjpglub.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF1cWtuaGpkanZkenF5anBnbHViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMTI2OTMsImV4cCI6MjA5Mjg4ODY5M30.cP-LdZSLJFukvx51wwlQUzmfO_-WXyRAS58CToX0XFA';
+const sb=window.supabase.createClient(SB_URL,SB_KEY);
 
-const locations=L_.map(l=>({id:l[0],name:l[1],lat:l[2],lng:l[3],city:l[4]}));
-
-const instructors=[
-  {demo:true,id:"marcus-reid",name:"Marcus Reid",photo:"https://randomuser.me/api/portraits/men/32.jpg",price:120,lid:"stevens-park",bio:"Specializes in short game mastery and course management strategy.",full:"Marcus Reid has spent over a decade helping golfers unlock their short game potential. A PGA Certified Professional, he combines video analysis with on-course strategy sessions. He's coached junior players who went on to compete collegiately and works with weekend golfers looking to break 80.",pga:true,yrs:12,rating:4.9,revs:87,lessons:340,specs:["Short Game","Course Strategy","Video Analysis"],rtexts:[{n:"Kevin R.",t:"Marcus completely transformed my short game. After 6 lessons I dropped from a 22 to a 16.",r:5},{n:"Priya S.",t:"His video analysis sessions are worth every penny. I finally understand what I was doing wrong with my chipping.",r:5},{n:"Dan W.",t:"Patient, knowledgeable, and really knows how to explain course management in a way that clicks.",r:5}],sched:{Mon:["7:00 AM","8:00 AM","9:00 AM","10:00 AM"],Tue:["8:00 AM","9:00 AM","10:00 AM","2:00 PM","3:00 PM"],Wed:["7:00 AM","8:00 AM","9:00 AM"],Thu:["8:00 AM","9:00 AM","10:00 AM","2:00 PM","3:00 PM"],Fri:["7:00 AM","8:00 AM","9:00 AM","10:00 AM"],Sat:["8:00 AM","9:00 AM","10:00 AM","11:00 AM"]}},
-  {demo:true,id:"sarah-chen",name:"Sarah Chen",photo:"https://randomuser.me/api/portraits/women/44.jpg",price:95,lid:"cedar-crest",bio:"Beginner-friendly instructor focused on building confidence and fundamentals.",full:"Sarah Chen believes golf should be welcoming to everyone. After playing D-I golf at TCU, she transitioned into teaching with a focus on accessibility. Her lessons emphasize grip, posture, and swing mechanics in a relaxed environment. Particularly popular with women and juniors new to the sport.",pga:false,yrs:6,rating:4.8,revs:63,lessons:210,specs:["Beginners","Women's Golf","Group Clinics"],rtexts:[{n:"Lisa M.",t:"I was intimidated to even try golf. Sarah made me feel so welcome from day one. Now I play every weekend.",r:5},{n:"Amanda K.",t:"Her group clinics are amazing. Met great people and learned so much in just 4 sessions.",r:5},{n:"Tom H.",t:"Brought my daughter for junior lessons. Sarah has a gift for teaching kids without them getting frustrated.",r:4}],sched:{Mon:["10:00 AM","11:00 AM","1:00 PM","2:00 PM"],Wed:["10:00 AM","11:00 AM","1:00 PM","2:00 PM"],Thu:["10:00 AM","11:00 AM"],Sat:["9:00 AM","10:00 AM","11:00 AM","12:00 PM"],Sun:["9:00 AM","10:00 AM","11:00 AM"]}},
-  {demo:true,id:"james-okafor",name:"James Okafor",photo:"https://randomuser.me/api/portraits/men/75.jpg",price:140,lid:"tenison-park",bio:"Data-driven coach using TrackMan technology for precision improvement.",full:"James Okafor brings a modern, data-driven approach to instruction. PGA Certified and trained in biomechanics, he uses TrackMan launch monitors and 3D motion capture for precise feedback. His students average a 5-stroke improvement within their first 10 lessons.",pga:true,yrs:9,rating:4.9,revs:112,lessons:480,specs:["TrackMan","Biomechanics","Advanced Players"],rtexts:[{n:"Mike R.",t:"The TrackMan data was eye-opening. James showed me exactly why I was losing distance and fixed it in two sessions.",r:5},{n:"Steve L.",t:"Best investment I've made in my golf game. Dropped 5 strokes in 3 months. The data doesn't lie.",r:5},{n:"Jennifer P.",t:"James is serious and technical but never condescending. He explains the biomechanics in a way anyone can understand.",r:5}],sched:{Tue:["6:00 AM","7:00 AM","8:00 AM","3:00 PM","4:00 PM"],Wed:["6:00 AM","7:00 AM","8:00 AM"],Thu:["6:00 AM","7:00 AM","8:00 AM","3:00 PM","4:00 PM"],Fri:["6:00 AM","7:00 AM","8:00 AM"],Sat:["7:00 AM","8:00 AM","9:00 AM","10:00 AM"]}},
-  {demo:true,id:"diana-martinez",name:"Diana Martinez",photo:"https://randomuser.me/api/portraits/women/68.jpg",price:110,lid:"texas-star",bio:"Former mini-tour player offering real-world competitive insight.",full:"Diana spent five years on the mini-tour circuit before discovering her passion for teaching. She specializes in helping players manage pressure, develop pre-shot routines, and think strategically around a course.",pga:true,yrs:8,rating:4.7,revs:54,lessons:195,specs:["Mental Game","Pre-Shot Routines","Competition Prep"],rtexts:[{n:"Chris D.",t:"Diana helped me develop a pre-shot routine that completely changed how I handle pressure on the course.",r:5},{n:"Karen W.",t:"Her competitive experience shows. She teaches things you can't learn from a textbook.",r:4},{n:"Brian T.",t:"Went to Diana to prep for club championship. Her course management advice was the difference maker.",r:5}],sched:{Mon:["9:00 AM","10:00 AM","11:00 AM","4:00 PM","5:00 PM"],Tue:["9:00 AM","10:00 AM","11:00 AM"],Wed:["4:00 PM","5:00 PM","6:00 PM"],Fri:["9:00 AM","10:00 AM","11:00 AM","4:00 PM","5:00 PM"],Sat:["8:00 AM","9:00 AM","10:00 AM","11:00 AM"],Sun:["8:00 AM","9:00 AM","10:00 AM"]}},
-  {demo:true,id:"tyler-brooks",name:"Tyler Brooks",photo:"https://randomuser.me/api/portraits/men/22.jpg",price:90,lid:"topgolf-dallas",bio:"Fun, high-energy coach perfect for groups and casual learners.",full:"Tyler makes golf fun — period. Based at Topgolf Dallas, he specializes in group lessons, corporate events, and casual instruction. His upbeat style puts even the most nervous beginners at ease.",pga:false,yrs:4,rating:4.6,revs:41,lessons:150,specs:["Group Lessons","Corporate Events","Casual Golf"],rtexts:[{n:"Jake M.",t:"Tyler made our corporate event a blast. Even the people who'd never golfed were having a great time.",r:5},{n:"Nicole F.",t:"Super fun and laid back. No pressure, just good vibes and solid tips. Perfect for someone just starting out.",r:4},{n:"Ryan G.",t:"Brought a group of friends for a bachelor party lesson. Tyler kept everyone laughing and actually learning.",r:5}],sched:{Wed:["12:00 PM","1:00 PM","2:00 PM","3:00 PM","6:00 PM","7:00 PM"],Thu:["12:00 PM","1:00 PM","2:00 PM","6:00 PM","7:00 PM"],Fri:["12:00 PM","1:00 PM","2:00 PM","3:00 PM","6:00 PM","7:00 PM","8:00 PM"],Sat:["10:00 AM","11:00 AM","12:00 PM","1:00 PM","2:00 PM","5:00 PM","6:00 PM","7:00 PM"],Sun:["11:00 AM","12:00 PM","1:00 PM","2:00 PM","3:00 PM"]}},
-  {demo:true,id:"rachel-kim",name:"Rachel Kim",photo:"https://randomuser.me/api/portraits/women/33.jpg",price:100,lid:"tierra-verde",bio:"Youth golf specialist who keeps kids engaged and improving.",full:"Rachel has dedicated her career to junior golf. With a background in sports psychology and youth development, she keeps young players motivated and having fun. She runs summer camps and private lessons for kids ages 6-17.",pga:true,yrs:7,rating:4.9,revs:76,lessons:310,specs:["Junior Golf","Youth Development","Summer Camps"],rtexts:[{n:"Maria L.",t:"My son looks forward to his lessons every week. Rachel makes it fun but he's genuinely improving fast.",r:5},{n:"David C.",t:"Rachel's summer camp was the highlight of my daughter's summer. She went from never playing to loving the game.",r:5},{n:"Susan P.",t:"Patient, encouraging, and knows exactly how to connect with kids. Wish I had a coach like her growing up.",r:5}],sched:{Mon:["3:00 PM","4:00 PM","5:00 PM"],Tue:["3:00 PM","4:00 PM","5:00 PM"],Wed:["9:00 AM","10:00 AM","3:00 PM","4:00 PM","5:00 PM"],Thu:["3:00 PM","4:00 PM","5:00 PM"],Sat:["8:00 AM","9:00 AM","10:00 AM","11:00 AM","12:00 PM"],Sun:["8:00 AM","9:00 AM","10:00 AM","11:00 AM"]}},
-  {demo:true,id:"david-nguyen",name:"David Nguyen",photo:"https://randomuser.me/api/portraits/men/45.jpg",price:150,lid:"brookhaven",bio:"Premium instruction for serious golfers pursuing single-digit handicaps.",full:"David is the instructor you see when you're serious about the next level. At Brookhaven Country Club, he works with committed golfers pursuing single-digit handicaps. He's coached multiple club champions and state amateur qualifiers.",pga:true,yrs:15,rating:5.0,revs:95,lessons:520,specs:["Low Handicap","Club Championships","Swing Mechanics"],rtexts:[{n:"Tom P.",t:"David's approach is elite-level. I was stuck at a 7 handicap for two years. Three months later I'm a 4.",r:5},{n:"Richard H.",t:"Worth every dollar. David sees things in your swing that no one else catches. Helped me win my first club championship.",r:5},{n:"Alex N.",t:"If you're serious about getting to single digits, David is the only choice. Methodical, precise, and results-driven.",r:5}],sched:{Mon:["7:00 AM","8:00 AM","9:00 AM"],Tue:["7:00 AM","8:00 AM","9:00 AM","10:00 AM"],Thu:["7:00 AM","8:00 AM","9:00 AM","10:00 AM"],Fri:["7:00 AM","8:00 AM","9:00 AM"],Sat:["7:00 AM","8:00 AM","9:00 AM"]}},
-  {demo:true,id:"emily-foster",name:"Emily Foster",photo:"https://randomuser.me/api/portraits/women/55.jpg",price:130,lid:"fields-ranch",bio:"Fitness-integrated coaching for power and injury prevention.",full:"Emily combines golf instruction and personal training for a holistic approach. Her lessons integrate flexibility, strength, and mobility work alongside swing instruction. Especially popular with players over 40.",pga:false,yrs:10,rating:4.8,revs:68,lessons:275,specs:["Golf Fitness","Injury Prevention","Power Training"],rtexts:[{n:"Mark S.",t:"Emily's fitness approach added 20 yards to my drive and my back doesn't hurt after 18 holes anymore.",r:5},{n:"Linda B.",t:"At 55 I thought my best golf was behind me. Emily's mobility work has me playing better than I did at 40.",r:5},{n:"Jeff K.",t:"The combination of swing coaching and fitness is unique. No one else in DFW does this.",r:4}],sched:{Mon:["6:00 AM","7:00 AM","8:00 AM","5:00 PM","6:00 PM"],Tue:["6:00 AM","7:00 AM","5:00 PM","6:00 PM"],Wed:["6:00 AM","7:00 AM","8:00 AM"],Thu:["6:00 AM","7:00 AM","5:00 PM","6:00 PM"],Fri:["6:00 AM","7:00 AM","8:00 AM"],Sat:["7:00 AM","8:00 AM","9:00 AM","10:00 AM"]}},
-  {demo:true,id:"carlos-ruiz",name:"Carlos Ruiz",photo:"https://randomuser.me/api/portraits/men/52.jpg",price:105,lid:"rockwood",bio:"Bilingual instructor passionate about making golf accessible to all.",full:"Carlos is on a mission to make golf accessible to underserved communities. Fluent in English and Spanish, he teaches at Rockwood Park in Fort Worth. He regularly volunteers for free clinics and youth outreach.",pga:true,yrs:11,rating:4.8,revs:92,lessons:410,specs:["Bilingual","Community Golf","Fundamentals"],rtexts:[{n:"Roberto M.",t:"Finally an instructor who speaks Spanish fluently. Carlos made my father feel completely comfortable learning the game.",r:5},{n:"Angela D.",t:"Carlos is the most patient instructor I've ever worked with. He genuinely cares about every student.",r:5},{n:"James T.",t:"Great fundamentals coach. Doesn't try to overcomplicate things. Just solid, repeatable technique.",r:4}],sched:{Mon:["8:00 AM","9:00 AM","10:00 AM","11:00 AM"],Tue:["8:00 AM","9:00 AM","10:00 AM"],Wed:["8:00 AM","9:00 AM","10:00 AM","11:00 AM","2:00 PM","3:00 PM"],Thu:["8:00 AM","9:00 AM","10:00 AM"],Fri:["8:00 AM","9:00 AM","10:00 AM","11:00 AM"],Sat:["7:00 AM","8:00 AM","9:00 AM","10:00 AM","11:00 AM"],Sun:["8:00 AM","9:00 AM","10:00 AM"]}},
-  {demo:true,id:"ashley-wang",name:"Ashley Wang",photo:"https://randomuser.me/api/portraits/women/28.jpg",price:115,lid:"sherrill-park",bio:"Swing mechanics expert focused on consistency and ball striking.",full:"Ashley is obsessed with swing mechanics. With a kinesiology degree and competitive experience, she breaks down the swing into repeatable movements. She's skilled at diagnosing slices, hooks, and inconsistency issues.",pga:false,yrs:8,rating:4.7,revs:59,lessons:230,specs:["Swing Mechanics","Ball Striking","Slice Fixing"],rtexts:[{n:"Paul G.",t:"Ashley fixed my slice in one lesson. ONE. I'd been fighting it for three years. Her kinesiology background really shows.",r:5},{n:"Michelle R.",t:"Very methodical approach. She uses slow-motion video and explains exactly what each part of the body should be doing.",r:5},{n:"Derek J.",t:"Consistent ball striking was my weakness. After 8 lessons with Ashley I'm hitting more fairways than ever.",r:4}],sched:{Tue:["9:00 AM","10:00 AM","11:00 AM","1:00 PM","2:00 PM"],Wed:["9:00 AM","10:00 AM","11:00 AM"],Thu:["9:00 AM","10:00 AM","11:00 AM","1:00 PM","2:00 PM"],Fri:["9:00 AM","10:00 AM","11:00 AM"],Sat:["8:00 AM","9:00 AM","10:00 AM","11:00 AM","12:00 PM"]}},
-];
+let locations=[];
+let instructors=[];
 
 const gL=id=>locations.find(l=>l.id===id);
 const gI=id=>instructors.filter(i=>i.lid===id);
@@ -626,7 +549,7 @@ function rs(r){let s='';for(let i=0;i<Math.floor(r);i++)s+='★';if(r-Math.floor
 
 let sel=null,fLoc='all',fPGA=false,fSort='recommended',fPrice='all',sq='';
 const favs=new Set();
-const liw=[...new Set(instructors.map(i=>i.lid))];
+let liw=[];
 
 function togFav(id,e){e.stopPropagation();if(favs.has(id))favs.delete(id);else favs.add(id);renderCards()}
 
@@ -669,6 +592,8 @@ L.control.zoom({position:'topleft'}).addTo(map);
 L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{attribution:'',maxZoom:19}).addTo(map);
 map.whenReady(()=>{setTimeout(()=>{const ml=document.getElementById('map-loading');if(ml)ml.classList.add('loaded')},800)});
 const markers={};
+function initMarkers(){
+Object.values(markers).forEach(m=>map.removeLayer(m));
 locations.forEach(loc=>{
   const count=gI(loc.id).length;
   if(count===0) return;
@@ -683,6 +608,7 @@ locations.forEach(loc=>{
   m.on('mouseout',()=>{document.querySelectorAll('.pin-highlight').forEach(el=>el.classList.remove('pin-highlight'))});
   markers[loc.id]=m;
 });
+}
 
 function openPop(id){
   const hint=document.getElementById('map-hint');if(hint)hint.classList.add('hidden');
@@ -886,6 +812,11 @@ function subBook(id){
 
   sendForm(FS_BOOKING,{_type:'Booking Request',student_name:bn,student_email:be,student_phone:bp,skill_level:bsk,instructor:i.name,location:loc.name,date:fullDate,time:bkSlot,price:'$'+i.price+'/hr'}).then(ok=>{
     if(ok){
+      // Also save to Supabase
+      const dbDate=bkDate.getFullYear()+'-'+String(bkDate.getMonth()+1).padStart(2,'0')+'-'+String(bkDate.getDate()).padStart(2,'0');
+      sb.from('bookings').insert({coach_id:id,student_name:bn,student_email:be,student_phone:bp,skill_level:bsk,booking_date:dbDate,booking_time:bkSlot,location_id:i.lid,price:i.price}).then(({error})=>{
+        if(error)console.error('Booking save error:',error);
+      });
       mr.innerHTML=`<div class="mo" onclick="cM()"><div class="md" onclick="event.stopPropagation()"><div class="bh"><div><div class="bt">Request Sent!</div></div><button class="cb" style="position:static" onclick="cM()">✕</button></div><div class="suc"><div class="suc-ic"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div><h3>You're all set!</h3><p>Lesson requested with ${i.name} on <strong>${fullDate} at ${bkSlot}</strong> at ${loc.name}.</p><p style="font-size:13px;color:var(--text-secondary);margin-top:12px">We'll connect you with ${i.name.split(' ')[0]} shortly. Check your email for confirmation.</p><button class="dbtn" onclick="cM()">Done</button></div></div></div>`;
     } else {
       alert('Something went wrong. Please try again.');
@@ -1241,7 +1172,12 @@ function submitReview(id){
   if(!name){alert('Please enter your name.');return}
   if(!text){alert('Please write a review.');return}
 
-  // Add review to instructor data
+  // Save to Supabase
+  sb.from('reviews').insert({coach_id:id,reviewer_name:name,rating:revRating,review_text:text}).then(({error})=>{
+    if(error)console.error('Review save error:',error);
+  });
+
+  // Add review to local data immediately
   if(!i.rtexts)i.rtexts=[];
   i.rtexts.unshift({n:name,t:text,r:revRating});
   i.revs++;
@@ -1261,7 +1197,75 @@ function toggleNav(){const n=document.getElementById('nav');n.classList.toggle('
 function closeNav(){document.getElementById('nav').classList.remove('open');document.getElementById('ham').innerHTML='<path d="M3 12h18M3 6h18M3 18h18"/>'}
 function togFaq(el){const a=el.nextElementSibling;const ar=el.querySelector('.arr');const o=a.classList.contains('open');document.querySelectorAll('.faq-a').forEach(x=>x.classList.remove('open'));document.querySelectorAll('.arr').forEach(x=>x.classList.remove('open'));if(!o){a.classList.add('open');ar.classList.add('open')}}
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(mr.innerHTML)cM();closeNav()}});
-renderAll();
+
+// ══════════════════════════════════════
+// LOAD DATA FROM SUPABASE
+// ══════════════════════════════════════
+async function loadData(){
+  try{
+    // Show loading state
+    const ls=document.getElementById('ls');
+    if(ls)ls.innerHTML='<div style="text-align:center;padding:40px;color:var(--text-muted)">Loading coaches...</div>';
+
+    // Fetch locations
+    const {data:locs,error:locErr}=await sb.from('locations').select('*');
+    if(locErr)throw locErr;
+    locations=locs.map(l=>({id:l.id,name:l.name,lat:l.lat,lng:l.lng,city:l.city}));
+
+    // Fetch approved coaches
+    const {data:coaches,error:coachErr}=await sb.from('coaches').select('*').or('status.eq.approved,is_demo.eq.true');
+    if(coachErr)throw coachErr;
+
+    // Fetch all reviews
+    const coachIds=coaches.map(c=>c.id);
+    const {data:reviews,error:revErr}=await sb.from('reviews').select('*');
+    if(revErr)throw revErr;
+
+    // Group reviews by coach_id
+    const revMap={};
+    (reviews||[]).forEach(r=>{if(!revMap[r.coach_id])revMap[r.coach_id]=[];revMap[r.coach_id].push(r)});
+
+    // Map to existing format
+    instructors=coaches.map(c=>{
+      const cRevs=revMap[c.id]||[];
+      return{
+        demo:c.is_demo||false,
+        id:c.id,
+        name:c.first_name+' '+c.last_name,
+        photo:c.photo_url||"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect width='200' height='200' fill='%2314442b'/%3E%3Ctext x='50%25' y='55%25' text-anchor='middle' fill='white' font-size='48' font-family='Arial'%3E"+c.first_name.charAt(0)+c.last_name.charAt(0)+"%3C/text%3E%3C/svg%3E",
+        price:c.price,
+        lid:c.location_id,
+        bio:c.short_bio||'',
+        full:c.full_bio||'',
+        pga:c.pga_certified||false,
+        yrs:c.years_experience||0,
+        rating:parseFloat(c.rating)||0,
+        revs:c.review_count||0,
+        lessons:c.lesson_count||0,
+        specs:c.specialties||[],
+        rtexts:cRevs.map(r=>({n:r.reviewer_name,t:r.review_text,r:r.rating})),
+        sched:c.schedule||{}
+      };
+    });
+
+    // Update dependent data
+    liw=[...new Set(instructors.map(i=>i.lid))];
+
+    // Create map markers
+    initMarkers();
+
+    // Render everything
+    renderAll();
+
+    console.log('Swingable Golf: Loaded '+instructors.length+' coaches from '+locations.length+' locations');
+  }catch(err){
+    console.error('Failed to load data:',err);
+    // Show error state
+    const ls=document.getElementById('ls');
+    if(ls)ls.innerHTML='<div style="text-align:center;padding:40px;color:#c33">Failed to load coaches. Please refresh the page.</div>';
+  }
+}
+loadData();
 </script>
 </body>
 </html>
