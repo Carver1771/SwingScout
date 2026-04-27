@@ -817,6 +817,8 @@ function subBook(id){
       sb.from('bookings').insert({coach_id:id,student_name:bn,student_email:be,student_phone:bp,skill_level:bsk,booking_date:dbDate,booking_time:bkSlot,location_id:i.lid,price:i.price}).then(({error})=>{
         if(error)console.error('Booking save error:',error);
       });
+      // Send booking emails
+      fetch('/api/send-email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'booking',data:{studentName:bn,studentEmail:be,studentPhone:bp,skillLevel:bsk,coachName:i.name,coachEmail:i.email,location:loc.name,date:fullDate,time:bkSlot,price:'$'+i.price+'/hr'}})}).catch(e=>console.error('Email error:',e));
       mr.innerHTML=`<div class="mo" onclick="cM()"><div class="md" onclick="event.stopPropagation()"><div class="bh"><div><div class="bt">Request Sent!</div></div><button class="cb" style="position:static" onclick="cM()">✕</button></div><div class="suc"><div class="suc-ic"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div><h3>You're all set!</h3><p>Lesson requested with ${i.name} on <strong>${fullDate} at ${bkSlot}</strong> at ${loc.name}.</p><p style="font-size:13px;color:var(--text-secondary);margin-top:12px">We'll connect you with ${i.name.split(' ')[0]} shortly. Check your email for confirmation.</p><button class="dbtn" onclick="cM()">Done</button></div></div></div>`;
     } else {
       alert('Something went wrong. Please try again.');
@@ -1232,6 +1234,7 @@ async function loadData(){
         demo:c.is_demo||false,
         id:c.id,
         name:c.first_name+' '+c.last_name,
+        email:c.email||'',
         photo:c.photo_url||"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect width='200' height='200' fill='%2314442b'/%3E%3Ctext x='50%25' y='55%25' text-anchor='middle' fill='white' font-size='48' font-family='Arial'%3E"+c.first_name.charAt(0)+c.last_name.charAt(0)+"%3C/text%3E%3C/svg%3E",
         price:c.price,
         lid:c.location_id,
