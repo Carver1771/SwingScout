@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Coach Dashboard — Swingable Golf</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 120'><path d='M50 2C25 2 5 22 5 47c0 33 45 70 45 70s45-37 45-70C95 22 75 2 50 2z' fill='%23c9a84c'/><rect x='42' y='26' width='5' height='42' rx='2' fill='white'/><path d='M47 26l24 11-24 11z' fill='white'/><circle cx='55' cy='76' r='7' fill='white'/></svg>">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --brand:#1b5e3b;--brand-light:#2a7d50;--brand-dark:#14442b;
+  --gold:#c9a84c;--gold-light:#f7f0db;
+  --bg:#fafaf8;--card:#ffffff;--surface:#f4f3f0;
+  --text:#1a1a1a;--text-secondary:#6b6b6b;--text-muted:#9e9e9e;
+  --border:#e8e6e1;--border-light:#f0eeea;
+  --danger:#dc3545;--success:#28a745;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* Header */
+.header{background:var(--brand-dark);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:#fff}
+.logo-text{font-family:'Libre Baskerville',serif;font-size:18px;font-weight:700}
+.header-right{display:flex;align-items:center;gap:16px}
+.header-link{color:rgba(255,255,255,.7);text-decoration:none;font-size:14px;transition:color .2s}
+.header-link:hover{color:#fff}
+.btn-logout{background:rgba(255,255,255,.15);color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;transition:background .2s}
+.btn-logout:hover{background:rgba(255,255,255,.25)}
+
+/* Auth Container */
+.auth-wrap{max-width:440px;margin:80px auto;padding:0 20px}
+.auth-card{background:var(--card);border-radius:16px;padding:40px;box-shadow:0 4px 24px rgba(0,0,0,.06);border:1px solid var(--border-light)}
+.auth-title{font-family:'Libre Baskerville',serif;font-size:24px;text-align:center;margin-bottom:8px}
+.auth-sub{text-align:center;color:var(--text-secondary);font-size:14px;margin-bottom:32px}
+.auth-toggle{text-align:center;margin-top:24px;font-size:14px;color:var(--text-secondary)}
+.auth-toggle a{color:var(--brand);cursor:pointer;text-decoration:none;font-weight:600}
+.auth-toggle a:hover{text-decoration:underline}
+.auth-error{background:#fef2f2;border:1px solid #fecaca;color:#dc2626;padding:12px 16px;border-radius:8px;font-size:13px;margin-bottom:16px;display:none}
+.auth-success{background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;padding:12px 16px;border-radius:8px;font-size:13px;margin-bottom:16px;display:none}
+
+/* Forms */
+.fl{margin-bottom:18px}
+.fl label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--text)}
+.fl input,.fl select,.fl textarea{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;background:var(--bg);transition:border-color .2s}
+.fl input:focus,.fl select:focus,.fl textarea:focus{outline:none;border-color:var(--brand)}
+.fl textarea{resize:vertical;min-height:80px}
+.btn{width:100%;padding:12px;background:var(--brand);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;transition:background .2s}
+.btn:hover{background:var(--brand-light)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-gold{background:var(--gold);color:var(--brand-dark)}
+.btn-gold:hover{background:#b89640}
+.btn-outline{background:transparent;color:var(--brand);border:2px solid var(--brand)}
+.btn-outline:hover{background:var(--brand);color:#fff}
+.btn-sm{width:auto;padding:8px 20px;font-size:13px}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-danger:hover{background:#c82333}
+
+/* Dashboard Layout */
+.dash{max-width:960px;margin:0 auto;padding:24px 20px}
+.dash-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:32px}
+.dash-title{font-family:'Libre Baskerville',serif;font-size:22px}
+.dash-status{font-size:13px;padding:4px 12px;border-radius:20px;font-weight:600}
+.status-pending{background:#fff3cd;color:#856404}
+.status-approved{background:#d4edda;color:#155724}
+.status-rejected{background:#f8d7da;color:#721c24}
+
+/* Tabs */
+.tabs{display:flex;gap:4px;border-bottom:2px solid var(--border-light);margin-bottom:28px}
+.tab{padding:10px 20px;font-size:14px;font-weight:500;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--brand);border-bottom-color:var(--brand);font-weight:600}
+
+/* Cards */
+.card{background:var(--card);border-radius:12px;padding:24px;border:1px solid var(--border-light);margin-bottom:20px}
+.card-title{font-weight:700;font-size:16px;margin-bottom:16px}
+
+/* Profile Preview */
+.profile-preview{display:flex;gap:20px;align-items:flex-start}
+.profile-photo{width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid var(--border-light)}
+.profile-info{flex:1}
+.profile-name{font-family:'Libre Baskerville',serif;font-size:20px;font-weight:700}
+.profile-meta{font-size:13px;color:var(--text-secondary);margin-top:4px}
+.profile-bio{font-size:14px;color:var(--text-secondary);margin-top:8px;line-height:1.6}
+
+/* Booking List */
+.booking-item{display:flex;align-items:center;justify-content:space-between;padding:16px 0;border-bottom:1px solid var(--border-light)}
+.booking-item:last-child{border-bottom:none}
+.booking-details{flex:1}
+.booking-student{font-weight:600;font-size:15px}
+.booking-time{font-size:13px;color:var(--text-secondary);margin-top:2px}
+.booking-badge{font-size:11px;padding:3px 10px;border-radius:12px;font-weight:600;text-transform:uppercase}
+.badge-pending{background:#fff3cd;color:#856404}
+.badge-confirmed{background:#d4edda;color:#155724}
+.badge-completed{background:var(--surface);color:var(--text-muted)}
+.badge-cancelled{background:#f8d7da;color:#721c24}
+
+/* Availability Grid */
+.avail-grid{display:grid;grid-template-columns:auto repeat(14,1fr);gap:2px;font-size:11px;overflow-x:auto}
+.avail-day{font-weight:600;padding:6px 8px;text-align:right;color:var(--text-secondary)}
+.avail-time{text-align:center;padding:4px 2px;color:var(--text-muted);font-size:10px}
+.avail-cell{text-align:center;padding:6px 4px;border-radius:4px;cursor:pointer;transition:all .15s;font-size:10px;user-select:none}
+.avail-cell:hover{background:var(--brand-light);color:#fff}
+.avail-cell.active{background:var(--brand);color:#fff}
+
+/* Specialties */
+.spec-grid{display:flex;flex-wrap:wrap;gap:8px}
+.spec-pill{padding:6px 14px;border-radius:20px;font-size:13px;cursor:pointer;border:1px solid var(--border);background:var(--bg);transition:all .2s;user-select:none}
+.spec-pill:hover{border-color:var(--brand)}
+.spec-pill.active{background:var(--brand);color:#fff;border-color:var(--brand)}
+
+/* Empty State */
+.empty{text-align:center;padding:40px;color:var(--text-muted)}
+.empty h3{font-size:16px;color:var(--text);margin-bottom:8px}
+
+/* Loading */
+.loading{text-align:center;padding:60px;color:var(--text-muted)}
+
+/* Responsive */
+@media(max-width:640px){
+  .auth-wrap{margin:40px auto}
+  .auth-card{padding:28px 20px}
+  .profile-preview{flex-direction:column;align-items:center;text-align:center}
+  .dash-header{flex-direction:column;gap:12px;align-items:flex-start}
+  .tabs{overflow-x:auto}
+  .tab{white-space:nowrap;padding:10px 14px;font-size:13px}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a href="/" class="logo">
+    <svg width="24" height="30" viewBox="0 0 100 120" fill="none"><path d="M50 2C25 2 5 22 5 47c0 33 45 70 45 70s45-37 45-70C95 22 75 2 50 2z" fill="#c9a84c"/><rect x="42" y="26" width="5" height="42" rx="2" fill="white"/><path d="M47 26l24 11-24 11z" fill="white"/><circle cx="55" cy="76" r="7" fill="white"/></svg>
+    <span class="logo-text">Swingable Golf</span>
+  </a>
+  <div class="header-right" id="header-right">
+    <a href="/" class="header-link">← Back to Site</a>
+  </div>
+</div>
+
+<div id="app">
+  <div class="loading">Loading...</div>
+</div>
+
+<script>
+// ══════════════════════════════════════
+// SUPABASE
+// ══════════════════════════════════════
+const SB_URL='https://quqknhjdjvdzqyjpglub.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF1cWtuaGpkanZkenF5anBnbHViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMTI2OTMsImV4cCI6MjA5Mjg4ODY5M30.cP-LdZSLJFukvx51wwlQUzmfO_-WXyRAS58CToX0XFA';
+const sb=window.supabase.createClient(SB_URL,SB_KEY);
+
+const app=document.getElementById('app');
+const DAYS=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const TIMES=['6:00 AM','7:00 AM','8:00 AM','9:00 AM','10:00 AM','11:00 AM','12:00 PM','1:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM','6:00 PM','7:00 PM'];
+const ALL_SPECS=["Short Game","Swing Mechanics","Putting","Driving","Course Strategy","Mental Game","Beginners","Junior Golf","Women's Golf","Group Lessons","Video Analysis","TrackMan","Golf Fitness","Competition Prep","Slice Fixing","Corporate Events"];
+
+let currentUser=null;
+let coachProfile=null;
+let coachBookings=[];
+let locations=[];
+let activeTab='profile';
+let editSched={};
+let editSpecs=[];
+
+// ══════════════════════════════════════
+// AUTH CHECK
+// ══════════════════════════════════════
+async function init(){
+  const {data:{session}}=await sb.auth.getSession();
+  if(session){
+    currentUser=session.user;
+    await loadCoachData();
+    renderDashboard();
+  } else {
+    renderAuth('login');
+  }
+}
+
+// ══════════════════════════════════════
+// AUTH UI
+// ══════════════════════════════════════
+function renderAuth(mode){
+  const isLogin=mode==='login';
+  app.innerHTML=`
+    <div class="auth-wrap">
+      <div class="auth-card">
+        <h1 class="auth-title">${isLogin?'Coach Login':'Create Account'}</h1>
+        <p class="auth-sub">${isLogin?'Sign in to manage your profile and bookings':'Start teaching on Swingable Golf'}</p>
+        <div class="auth-error" id="auth-error"></div>
+        <div class="auth-success" id="auth-success"></div>
+        ${!isLogin?`
+        <div style="display:flex;gap:12px">
+          <div class="fl" style="flex:1"><label>First Name</label><input id="a-first" placeholder="John"></div>
+          <div class="fl" style="flex:1"><label>Last Name</label><input id="a-last" placeholder="Smith"></div>
+        </div>
+        `:''}
+        <div class="fl"><label>Email</label><input id="a-email" type="email" placeholder="you@example.com"></div>
+        <div class="fl"><label>Password</label><input id="a-pass" type="password" placeholder="${isLogin?'Your password':'Create a password (min 6 chars)'}"></div>
+        <button class="btn" onclick="handleAuth('${mode}')" id="auth-btn">${isLogin?'Sign In':'Create Account'}</button>
+        <div class="auth-toggle">
+          ${isLogin?'Don\'t have an account? <a onclick="renderAuth(\'signup\')">Sign up</a>':'Already have an account? <a onclick="renderAuth(\'login\')">Sign in</a>'}
+        </div>
+      </div>
+    </div>`;
+}
+
+async function handleAuth(mode){
+  const email=document.getElementById('a-email').value.trim();
+  const pass=document.getElementById('a-pass').value;
+  const errEl=document.getElementById('auth-error');
+  const sucEl=document.getElementById('auth-success');
+  const btn=document.getElementById('auth-btn');
+
+  errEl.style.display='none';
+  sucEl.style.display='none';
+
+  if(!email||!pass){errEl.textContent='Please fill in all fields.';errEl.style.display='block';return}
+
+  btn.disabled=true;
+  btn.textContent=mode==='login'?'Signing in...':'Creating account...';
+
+  if(mode==='signup'){
+    const first=document.getElementById('a-first').value.trim();
+    const last=document.getElementById('a-last').value.trim();
+    if(!first||!last){errEl.textContent='Please enter your name.';errEl.style.display='block';btn.disabled=false;btn.textContent='Create Account';return}
+
+    const {data,error}=await sb.auth.signUp({email,password:pass});
+    if(error){errEl.textContent=error.message;errEl.style.display='block';btn.disabled=false;btn.textContent='Create Account';return}
+
+    currentUser=data.user;
+
+    // Create coach profile
+    const {error:profErr}=await sb.from('coaches').insert({
+      user_id:currentUser.id,
+      first_name:first,
+      last_name:last,
+      email:email,
+      price:100,
+      status:'pending',
+      schedule:{},
+      specialties:[]
+    });
+    if(profErr)console.error('Profile creation error:',profErr);
+
+    await loadCoachData();
+    renderDashboard();
+
+  } else {
+    const {data,error}=await sb.auth.signInWithPassword({email,password:pass});
+    if(error){errEl.textContent=error.message;errEl.style.display='block';btn.disabled=false;btn.textContent='Sign In';return}
+
+    currentUser=data.user;
+    await loadCoachData();
+    renderDashboard();
+  }
+}
+
+async function logout(){
+  await sb.auth.signOut();
+  currentUser=null;
+  coachProfile=null;
+  renderAuth('login');
+  document.getElementById('header-right').innerHTML='<a href="/" class="header-link">← Back to Site</a>';
+}
+
+// ══════════════════════════════════════
+// DATA LOADING
+// ══════════════════════════════════════
+async function loadCoachData(){
+  // Load locations
+  const {data:locs}=await sb.from('locations').select('*');
+  locations=locs||[];
+
+  // Load coach profile
+  const {data:profiles}=await sb.from('coaches').select('*').eq('user_id',currentUser.id);
+  coachProfile=profiles&&profiles.length?profiles[0]:null;
+
+  // Load bookings if coach exists
+  if(coachProfile){
+    const {data:bookings}=await sb.from('bookings').select('*').eq('coach_id',coachProfile.id).order('booking_date',{ascending:false});
+    coachBookings=bookings||[];
+  }
+}
+
+// ══════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════
+function renderDashboard(){
+  if(!coachProfile){
+    app.innerHTML='<div class="loading">Setting up your profile...</div>';
+    return;
+  }
+
+  document.getElementById('header-right').innerHTML=`
+    <a href="/" class="header-link">← Back to Site</a>
+    <span style="color:rgba(255,255,255,.5);font-size:13px">${coachProfile.first_name} ${coachProfile.last_name}</span>
+    <button class="btn-logout" onclick="logout()">Sign Out</button>
+  `;
+
+  const statusClass=coachProfile.status==='approved'?'status-approved':coachProfile.status==='rejected'?'status-rejected':'status-pending';
+  const statusText=coachProfile.status.charAt(0).toUpperCase()+coachProfile.status.slice(1);
+
+  app.innerHTML=`
+    <div class="dash">
+      <div class="dash-header">
+        <h1 class="dash-title">Coach Dashboard</h1>
+        <span class="dash-status ${statusClass}">${statusText}</span>
+      </div>
+
+      ${coachProfile.status==='pending'?`
+      <div class="card" style="background:var(--gold-light);border-color:#e8d89c;margin-bottom:24px">
+        <p style="font-size:14px;color:var(--brand-dark)"><strong>Your profile is under review.</strong> Complete your profile below so we can approve you faster. Once approved, you'll appear on the public site and students can book lessons with you.</p>
+      </div>`:''}
+
+      <div class="tabs">
+        <div class="tab ${activeTab==='profile'?'active':''}" onclick="activeTab='profile';renderDashboard()">Profile</div>
+        <div class="tab ${activeTab==='availability'?'active':''}" onclick="activeTab='availability';renderDashboard()">Availability</div>
+        <div class="tab ${activeTab==='bookings'?'active':''}" onclick="activeTab='bookings';renderDashboard()">Bookings${coachBookings.length?' ('+coachBookings.length+')':''}</div>
+      </div>
+
+      <div id="tab-content">${renderTabContent()}</div>
+    </div>`;
+}
+
+function renderTabContent(){
+  if(activeTab==='profile') return renderProfileTab();
+  if(activeTab==='availability') return renderAvailTab();
+  if(activeTab==='bookings') return renderBookingsTab();
+  return '';
+}
+
+// ══════════════════════════════════════
+// PROFILE TAB
+// ══════════════════════════════════════
+function renderProfileTab(){
+  const c=coachProfile;
+  const loc=locations.find(l=>l.id===c.location_id);
+  const photoSrc=c.photo_url||"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect width='200' height='200' fill='%2314442b'/%3E%3Ctext x='50%25' y='55%25' text-anchor='middle' fill='white' font-size='48' font-family='Arial'%3E"+(c.first_name||'').charAt(0)+(c.last_name||'').charAt(0)+"%3C/text%3E%3C/svg%3E";
+
+  return `
+    <div class="card">
+      <div class="profile-preview">
+        <img class="profile-photo" src="${photoSrc}">
+        <div class="profile-info">
+          <div class="profile-name">${c.first_name} ${c.last_name}</div>
+          <div class="profile-meta">${loc?loc.name:'No location set'} · $${c.price}/hr${c.pga_certified?' · PGA Certified':''}</div>
+          <div class="profile-bio">${c.short_bio||'No bio yet — add one below!'}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Edit Profile</div>
+      <div style="display:flex;gap:12px">
+        <div class="fl" style="flex:1"><label>First Name</label><input id="e-first" value="${c.first_name||''}"></div>
+        <div class="fl" style="flex:1"><label>Last Name</label><input id="e-last" value="${c.last_name||''}"></div>
+      </div>
+      <div class="fl"><label>Phone</label><input id="e-phone" value="${c.phone||''}" placeholder="(214) 555-0123"></div>
+      <div class="fl"><label>Instagram</label><input id="e-insta" value="${c.instagram||''}" placeholder="@yourhandle"></div>
+      <div class="fl"><label>Hourly Rate ($)</label><input id="e-price" type="number" value="${c.price||100}" min="25" max="500"></div>
+      <div class="fl">
+        <label>Location</label>
+        <select id="e-loc">
+          <option value="">Select a venue</option>
+          ${locations.map(l=>`<option value="${l.id}" ${c.location_id===l.id?'selected':''}>${l.name} — ${l.city}</option>`).join('')}
+        </select>
+      </div>
+      <div class="fl"><label>Short Bio (one line)</label><input id="e-sbio" value="${(c.short_bio||'').replace(/"/g,'&quot;')}" maxlength="120" placeholder="Brief description of your coaching style"></div>
+      <div class="fl"><label>Full Bio</label><textarea id="e-fbio" rows="5" placeholder="Tell students about your experience, teaching philosophy, and what they can expect...">${c.full_bio||''}</textarea></div>
+      <div class="fl">
+        <label style="margin-bottom:4px">PGA Certified</label>
+        <label style="display:flex;align-items:center;gap:8px;font-weight:400;font-size:14px;cursor:pointer">
+          <input type="checkbox" id="e-pga" ${c.pga_certified?'checked':''} style="width:18px;height:18px;accent-color:var(--brand)">
+          Yes, I am PGA Certified
+        </label>
+      </div>
+      <div class="fl">
+        <label>Years of Experience</label>
+        <input id="e-yrs" type="number" value="${c.years_experience||0}" min="0" max="50">
+      </div>
+      <div class="fl">
+        <label>Specialties (pick up to 5)</label>
+        <div class="spec-grid" id="spec-grid">
+          ${ALL_SPECS.map(s=>`<div class="spec-pill ${(c.specialties||[]).includes(s)?'active':''}" onclick="toggleEditSpec('${s}')">${s}</div>`).join('')}
+        </div>
+      </div>
+      <button class="btn" onclick="saveProfile()" id="save-btn">Save Changes</button>
+      <div id="save-msg" style="text-align:center;margin-top:12px;font-size:14px"></div>
+    </div>`;
+}
+
+function toggleEditSpec(s){
+  const specs=coachProfile.specialties||[];
+  const idx=specs.indexOf(s);
+  if(idx>-1)specs.splice(idx,1);
+  else if(specs.length<5)specs.push(s);
+  coachProfile.specialties=specs;
+  // Update pills
+  document.querySelectorAll('.spec-pill').forEach(el=>{
+    el.classList.toggle('active',specs.includes(el.textContent));
+  });
+}
+
+async function saveProfile(){
+  const btn=document.getElementById('save-btn');
+  const msg=document.getElementById('save-msg');
+  btn.disabled=true;btn.textContent='Saving...';
+
+  const updates={
+    first_name:document.getElementById('e-first').value.trim(),
+    last_name:document.getElementById('e-last').value.trim(),
+    phone:document.getElementById('e-phone').value.trim(),
+    instagram:document.getElementById('e-insta').value.trim(),
+    price:parseInt(document.getElementById('e-price').value)||100,
+    location_id:document.getElementById('e-loc').value||null,
+    short_bio:document.getElementById('e-sbio').value.trim(),
+    full_bio:document.getElementById('e-fbio').value.trim(),
+    pga_certified:document.getElementById('e-pga').checked,
+    years_experience:parseInt(document.getElementById('e-yrs').value)||0,
+    specialties:coachProfile.specialties||[],
+    updated_at:new Date().toISOString()
+  };
+
+  const {error}=await sb.from('coaches').update(updates).eq('id',coachProfile.id);
+
+  if(error){
+    msg.innerHTML='<span style="color:var(--danger)">Error: '+error.message+'</span>';
+  } else {
+    Object.assign(coachProfile,updates);
+    msg.innerHTML='<span style="color:var(--success)">✓ Profile saved!</span>';
+    setTimeout(()=>{msg.innerHTML=''},3000);
+  }
+  btn.disabled=false;btn.textContent='Save Changes';
+}
+
+// ══════════════════════════════════════
+// AVAILABILITY TAB
+// ══════════════════════════════════════
+function renderAvailTab(){
+  const sched=coachProfile.schedule||{};
+  
+  let grid='<div class="avail-grid"><div></div>';
+  TIMES.forEach(t=>{grid+=`<div class="avail-time">${t.replace(':00','').replace(' ','')}</div>`});
+  
+  DAYS.forEach(day=>{
+    grid+=`<div class="avail-day">${day}</div>`;
+    TIMES.forEach(t=>{
+      const active=sched[day]&&sched[day].includes(t);
+      grid+=`<div class="avail-cell ${active?'active':''}" onclick="toggleAvail('${day}','${t}')">${active?'✓':''}</div>`;
+    });
+  });
+  grid+='</div>';
+
+  const totalSlots=Object.values(sched).reduce((a,b)=>a+(b?b.length:0),0);
+
+  return `
+    <div class="card">
+      <div class="card-title">Weekly Availability</div>
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">Click cells to toggle your available time slots. <strong>${totalSlots} slots</strong> currently set.</p>
+      ${grid}
+      <button class="btn" style="margin-top:20px" onclick="saveAvailability()" id="avail-btn">Save Availability</button>
+      <div id="avail-msg" style="text-align:center;margin-top:12px;font-size:14px"></div>
+    </div>`;
+}
+
+function toggleAvail(day,time){
+  const sched=coachProfile.schedule||{};
+  if(!sched[day])sched[day]=[];
+  const idx=sched[day].indexOf(time);
+  if(idx>-1)sched[day].splice(idx,1);
+  else sched[day].push(time);
+  sched[day].sort((a,b)=>TIMES.indexOf(a)-TIMES.indexOf(b));
+  coachProfile.schedule=sched;
+
+  // Update the cell without re-rendering
+  const cells=document.querySelectorAll('.avail-cell');
+  let cellIdx=0;
+  DAYS.forEach(d=>{
+    TIMES.forEach(t=>{
+      const isActive=sched[d]&&sched[d].includes(t);
+      cells[cellIdx].className='avail-cell'+(isActive?' active':'');
+      cells[cellIdx].textContent=isActive?'✓':'';
+      cellIdx++;
+    });
+  });
+  // Update count
+  const totalSlots=Object.values(sched).reduce((a,b)=>a+(b?b.length:0),0);
+  document.querySelector('.card-title+p strong').textContent=totalSlots+' slots';
+}
+
+async function saveAvailability(){
+  const btn=document.getElementById('avail-btn');
+  const msg=document.getElementById('avail-msg');
+  btn.disabled=true;btn.textContent='Saving...';
+
+  const {error}=await sb.from('coaches').update({
+    schedule:coachProfile.schedule,
+    updated_at:new Date().toISOString()
+  }).eq('id',coachProfile.id);
+
+  if(error){
+    msg.innerHTML='<span style="color:var(--danger)">Error: '+error.message+'</span>';
+  } else {
+    msg.innerHTML='<span style="color:var(--success)">✓ Availability saved!</span>';
+    setTimeout(()=>{msg.innerHTML=''},3000);
+  }
+  btn.disabled=false;btn.textContent='Save Availability';
+}
+
+// ══════════════════════════════════════
+// BOOKINGS TAB
+// ══════════════════════════════════════
+function renderBookingsTab(){
+  if(!coachBookings.length){
+    return `<div class="card"><div class="empty"><h3>No bookings yet</h3><p>When students book lessons with you, they'll appear here.</p></div></div>`;
+  }
+
+  const items=coachBookings.map(b=>{
+    const loc=locations.find(l=>l.id===b.location_id);
+    const badgeClass='badge-'+b.status;
+    const dateStr=new Date(b.booking_date+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+    return `
+      <div class="booking-item">
+        <div class="booking-details">
+          <div class="booking-student">${b.student_name}</div>
+          <div class="booking-time">${dateStr} at ${b.booking_time}${loc?' · '+loc.name:''}</div>
+          <div class="booking-time">${b.student_email}${b.student_phone?' · '+b.student_phone:''}</div>
+        </div>
+        <span class="booking-badge ${badgeClass}">${b.status}</span>
+      </div>`;
+  }).join('');
+
+  return `
+    <div class="card">
+      <div class="card-title">Your Bookings (${coachBookings.length})</div>
+      ${items}
+    </div>`;
+}
+
+// ══════════════════════════════════════
+// INIT
+// ══════════════════════════════════════
+init();
+</script>
+</body>
+</html>
