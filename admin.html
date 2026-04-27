@@ -175,7 +175,7 @@ function renderLogin(){
         <h1 class="auth-title">Admin Login</h1>
         <p class="auth-sub">Swingable Golf admin access only</p>
         <div class="auth-error" id="auth-error"></div>
-        <div class="fl"><label>Email</label><input id="a-email" type="email" placeholder="team@swingablegolf.com"></div>
+        <div class="fl"><label>Email</label><input id="a-email" type="email" placeholder="Admin email"></div>
         <div class="fl"><label>Password</label><input id="a-pass" type="password" placeholder="Password"></div>
         <button class="btn" onclick="handleLogin()" id="login-btn">Sign In</button>
       </div>
@@ -440,6 +440,10 @@ function viewCoach(id){
         <div class="detail-row"><div class="detail-label">Email</div><div class="detail-value">${c.email}</div></div>
         <div class="detail-row"><div class="detail-label">Phone</div><div class="detail-value">${c.phone||'—'}</div></div>
         <div class="detail-row"><div class="detail-label">Instagram</div><div class="detail-value">${c.instagram||'—'}</div></div>
+        <div class="detail-row"><div class="detail-label">Website</div><div class="detail-value">${c.website?'<a href="'+c.website+'" target="_blank" style="color:var(--brand)">'+c.website+'</a>':'—'}</div></div>
+        <div class="detail-row"><div class="detail-label">LinkedIn</div><div class="detail-value">${c.linkedin?'<a href="'+c.linkedin+'" target="_blank" style="color:var(--brand)">'+c.linkedin+'</a>':'—'}</div></div>
+        <div class="detail-row"><div class="detail-label">Certifications</div><div class="detail-value">${c.certifications||'—'}</div></div>
+        <div class="detail-row"><div class="detail-label">Achievements</div><div class="detail-value" style="white-space:pre-wrap">${c.achievements||'—'}</div></div>
         <div class="detail-row"><div class="detail-label">Location</div><div class="detail-value">${locName}${c.custom_facility_address?'<br><span style="color:var(--text-muted);font-size:12px">'+c.custom_facility_address+'</span>':''}</div></div>
         <div class="detail-row"><div class="detail-label">Rate</div><div class="detail-value">$${c.price}/hr</div></div>
         <div class="detail-row"><div class="detail-label">PGA Certified</div><div class="detail-value">${c.pga_certified?'Yes':'No'}</div></div>
