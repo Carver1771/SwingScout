@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin — Swingable Golf</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 120'><path d='M50 2C25 2 5 22 5 47c0 33 45 70 45 70s45-37 45-70C95 22 75 2 50 2z' fill='%23c9a84c'/><rect x='42' y='26' width='5' height='42' rx='2' fill='white'/><path d='M47 26l24 11-24 11z' fill='white'/><circle cx='55' cy='76' r='7' fill='white'/></svg>">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --brand:#1b5e3b;--brand-light:#2a7d50;--brand-dark:#14442b;
+  --gold:#c9a84c;--gold-light:#f7f0db;
+  --bg:#f5f5f0;--card:#ffffff;--surface:#eeeee8;
+  --text:#1a1a1a;--text-secondary:#6b6b6b;--text-muted:#9e9e9e;
+  --border:#e8e6e1;--border-light:#f0eeea;
+  --danger:#dc3545;--success:#28a745;--warning:#ffc107;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+.header{background:var(--brand-dark);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:#fff}
+.logo-text{font-family:'Libre Baskerville',serif;font-size:18px;font-weight:700}
+.logo-badge{background:var(--gold);color:var(--brand-dark);font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:.5px}
+.header-right{display:flex;align-items:center;gap:16px}
+.header-link{color:rgba(255,255,255,.7);text-decoration:none;font-size:14px}
+.header-link:hover{color:#fff}
+.btn-logout{background:rgba(255,255,255,.15);color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500}
+.btn-logout:hover{background:rgba(255,255,255,.25)}
+
+/* Auth */
+.auth-wrap{max-width:400px;margin:100px auto;padding:0 20px}
+.auth-card{background:var(--card);border-radius:16px;padding:40px;box-shadow:0 4px 24px rgba(0,0,0,.06);border:1px solid var(--border-light)}
+.auth-title{font-family:'Libre Baskerville',serif;font-size:22px;text-align:center;margin-bottom:8px}
+.auth-sub{text-align:center;color:var(--text-secondary);font-size:14px;margin-bottom:28px}
+.auth-error{background:#fef2f2;border:1px solid #fecaca;color:#dc2626;padding:12px;border-radius:8px;font-size:13px;margin-bottom:16px;display:none}
+.fl{margin-bottom:16px}
+.fl label{display:block;font-size:13px;font-weight:600;margin-bottom:6px}
+.fl input,.fl select,.fl textarea{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;background:#fff}
+.fl input:focus,.fl select:focus{outline:none;border-color:var(--brand)}
+.btn{width:100%;padding:12px;background:var(--brand);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer}
+.btn:hover{background:var(--brand-light)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* Dashboard */
+.dash{max-width:1100px;margin:0 auto;padding:24px 20px}
+.dash-title{font-family:'Libre Baskerville',serif;font-size:24px;margin-bottom:24px}
+
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:28px}
+.stat{background:var(--card);border-radius:12px;padding:20px;border:1px solid var(--border-light)}
+.stat-num{font-size:32px;font-weight:700;color:var(--brand)}
+.stat-label{font-size:13px;color:var(--text-muted);margin-top:4px}
+.stat-num.gold{color:var(--gold)}
+.stat-num.danger{color:var(--danger)}
+
+/* Tabs */
+.tabs{display:flex;gap:4px;border-bottom:2px solid var(--border-light);margin-bottom:24px}
+.tab{padding:10px 20px;font-size:14px;font-weight:500;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--brand);border-bottom-color:var(--brand);font-weight:600}
+.tab .badge-count{background:var(--danger);color:#fff;font-size:10px;padding:2px 6px;border-radius:10px;margin-left:6px}
+
+/* Table */
+.table-wrap{background:var(--card);border-radius:12px;border:1px solid var(--border-light);overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;padding:12px 16px;background:var(--surface);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);border-bottom:1px solid var(--border)}
+td{padding:12px 16px;border-bottom:1px solid var(--border-light);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover{background:var(--bg)}
+
+.coach-name{font-weight:600}
+.coach-email{font-size:12px;color:var(--text-muted)}
+.coach-photo{width:36px;height:36px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:10px}
+
+.status-badge{font-size:11px;padding:3px 10px;border-radius:12px;font-weight:600;text-transform:uppercase}
+.s-pending{background:#fff3cd;color:#856404}
+.s-approved{background:#d4edda;color:#155724}
+.s-rejected{background:#f8d7da;color:#721c24}
+
+.action-btn{padding:6px 14px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;margin-right:6px}
+.btn-approve{background:var(--success);color:#fff}
+.btn-approve:hover{background:#218838}
+.btn-reject{background:var(--danger);color:#fff}
+.btn-reject:hover{background:#c82333}
+.btn-view{background:var(--surface);color:var(--text)}
+.btn-view:hover{background:var(--border)}
+
+/* Detail Modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px}
+.modal{background:var(--card);border-radius:16px;max-width:600px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal-header{padding:20px 24px;border-bottom:1px solid var(--border-light);display:flex;justify-content:space-between;align-items:center}
+.modal-header h2{font-family:'Libre Baskerville',serif;font-size:18px}
+.modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-muted);padding:4px 8px}
+.modal-close:hover{color:var(--text)}
+.modal-body{padding:24px}
+.detail-row{display:flex;padding:10px 0;border-bottom:1px solid var(--border-light)}
+.detail-row:last-child{border-bottom:none}
+.detail-label{width:140px;font-size:13px;font-weight:600;color:var(--text-secondary);flex-shrink:0}
+.detail-value{flex:1;font-size:14px}
+.modal-actions{padding:16px 24px;border-top:1px solid var(--border-light);display:flex;gap:10px;justify-content:flex-end}
+
+/* Empty */
+.empty{text-align:center;padding:40px;color:var(--text-muted)}
+.empty h3{color:var(--text);margin-bottom:8px}
+
+/* Add Location */
+.add-loc-form{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.add-loc-form .fl{margin-bottom:0}
+.add-loc-full{grid-column:1/-1}
+
+@media(max-width:640px){
+  .stats{grid-template-columns:1fr 1fr}
+  .tabs{overflow-x:auto}
+  .tab{white-space:nowrap;padding:10px 12px;font-size:13px}
+  .add-loc-form{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a href="/" class="logo">
+    <svg width="24" height="30" viewBox="0 0 100 120" fill="none"><path d="M50 2C25 2 5 22 5 47c0 33 45 70 45 70s45-37 45-70C95 22 75 2 50 2z" fill="#c9a84c"/><rect x="42" y="26" width="5" height="42" rx="2" fill="white"/><path d="M47 26l24 11-24 11z" fill="white"/><circle cx="55" cy="76" r="7" fill="white"/></svg>
+    <span class="logo-text">Swingable Golf</span>
+    <span class="logo-badge">Admin</span>
+  </a>
+  <div class="header-right" id="header-right">
+    <a href="/" class="header-link">View Site</a>
+  </div>
+</div>
+
+<div id="app"><div class="auth-wrap"><div class="auth-card"><div style="text-align:center;padding:20px;color:var(--text-muted)">Loading...</div></div></div></div>
+
+<script>
+const SB_URL='https://quqknhjdjvdzqyjpglub.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF1cWtuaGpkanZkenF5anBnbHViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMTI2OTMsImV4cCI6MjA5Mjg4ODY5M30.cP-LdZSLJFukvx51wwlQUzmfO_-WXyRAS58CToX0XFA';
+const sb=window.supabase.createClient(SB_URL,SB_KEY);
+
+const app=document.getElementById('app');
+let currentUser=null;
+let coaches=[];
+let bookings=[];
+let locations=[];
+let activeTab='pending';
+
+// ══════════════════════════════════════
+// INIT
+// ══════════════════════════════════════
+async function init(){
+  const {data:{session}}=await sb.auth.getSession();
+  if(session){
+    currentUser=session.user;
+    // Verify admin
+    const {data,error}=await sb.rpc('is_admin');
+    if(error||!data){
+      app.innerHTML='<div class="auth-wrap"><div class="auth-card"><h1 class="auth-title">Access Denied</h1><p class="auth-sub">This account does not have admin privileges.</p><button class="btn" onclick="logout()" style="margin-top:16px">Sign Out</button></div></div>';
+      return;
+    }
+    await loadData();
+    renderDashboard();
+  } else {
+    renderLogin();
+  }
+}
+
+// ══════════════════════════════════════
+// AUTH
+// ══════════════════════════════════════
+function renderLogin(){
+  app.innerHTML=`
+    <div class="auth-wrap">
+      <div class="auth-card">
+        <h1 class="auth-title">Admin Login</h1>
+        <p class="auth-sub">Swingable Golf admin access only</p>
+        <div class="auth-error" id="auth-error"></div>
+        <div class="fl"><label>Email</label><input id="a-email" type="email" placeholder="team@swingablegolf.com"></div>
+        <div class="fl"><label>Password</label><input id="a-pass" type="password" placeholder="Password"></div>
+        <button class="btn" onclick="handleLogin()" id="login-btn">Sign In</button>
+      </div>
+    </div>`;
+}
+
+async function handleLogin(){
+  const email=document.getElementById('a-email').value.trim();
+  const pass=document.getElementById('a-pass').value;
+  const err=document.getElementById('auth-error');
+  const btn=document.getElementById('login-btn');
+  err.style.display='none';
+  if(!email||!pass){err.textContent='Enter email and password.';err.style.display='block';return}
+  btn.disabled=true;btn.textContent='Signing in...';
+  const {data,error}=await sb.auth.signInWithPassword({email,password:pass});
+  if(error){err.textContent=error.message;err.style.display='block';btn.disabled=false;btn.textContent='Sign In';return}
+  currentUser=data.user;
+  // Verify admin
+  const {data:isAdmin,error:adminErr}=await sb.rpc('is_admin');
+  if(adminErr||!isAdmin){
+    await sb.auth.signOut();
+    err.textContent='This account does not have admin access.';err.style.display='block';btn.disabled=false;btn.textContent='Sign In';return;
+  }
+  await loadData();
+  renderDashboard();
+}
+
+async function logout(){
+  await sb.auth.signOut();
+  currentUser=null;
+  renderLogin();
+  document.getElementById('header-right').innerHTML='<a href="/" class="header-link">View Site</a>';
+}
+
+// ══════════════════════════════════════
+// DATA
+// ══════════════════════════════════════
+async function loadData(){
+  const {data:c}=await sb.rpc('get_all_coaches');
+  coaches=c||[];
+  const {data:b}=await sb.rpc('get_all_bookings');
+  bookings=b||[];
+  const {data:l}=await sb.from('locations').select('*').order('name');
+  locations=l||[];
+}
+
+// ══════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════
+function renderDashboard(){
+  document.getElementById('header-right').innerHTML=`
+    <a href="/" class="header-link">View Site</a>
+    <a href="/coach.html" class="header-link">Coach Portal</a>
+    <button class="btn-logout" onclick="logout()">Sign Out</button>`;
+
+  const pending=coaches.filter(c=>c.status==='pending'&&!c.is_demo);
+  const approved=coaches.filter(c=>c.status==='approved'&&!c.is_demo);
+  const demo=coaches.filter(c=>c.is_demo);
+  const totalBookings=bookings.length;
+  const pendingBookings=bookings.filter(b=>b.status==='pending').length;
+
+  app.innerHTML=`
+    <div class="dash">
+      <h1 class="dash-title">Admin Dashboard</h1>
+
+      <div class="stats">
+        <div class="stat"><div class="stat-num">${pending.length}</div><div class="stat-label">Pending Applications</div></div>
+        <div class="stat"><div class="stat-num gold">${approved.length}</div><div class="stat-label">Active Coaches</div></div>
+        <div class="stat"><div class="stat-num">${totalBookings}</div><div class="stat-label">Total Bookings</div></div>
+        <div class="stat"><div class="stat-num">${locations.length}</div><div class="stat-label">Locations</div></div>
+      </div>
+
+      <div class="tabs">
+        <div class="tab ${activeTab==='pending'?'active':''}" onclick="activeTab='pending';renderDashboard()">Pending${pending.length?'<span class="badge-count">'+pending.length+'</span>':''}</div>
+        <div class="tab ${activeTab==='coaches'?'active':''}" onclick="activeTab='coaches';renderDashboard()">All Coaches</div>
+        <div class="tab ${activeTab==='bookings'?'active':''}" onclick="activeTab='bookings';renderDashboard()">Bookings</div>
+        <div class="tab ${activeTab==='locations'?'active':''}" onclick="activeTab='locations';renderDashboard()">Locations</div>
+      </div>
+
+      <div id="tab-content">${renderTab()}</div>
+    </div>`;
+}
+
+function renderTab(){
+  if(activeTab==='pending') return renderPending();
+  if(activeTab==='coaches') return renderCoaches();
+  if(activeTab==='bookings') return renderBookings();
+  if(activeTab==='locations') return renderLocations();
+  return '';
+}
+
+// ══════════════════════════════════════
+// PENDING TAB
+// ══════════════════════════════════════
+function renderPending(){
+  const pending=coaches.filter(c=>c.status==='pending'&&!c.is_demo);
+  if(!pending.length) return '<div class="empty"><h3>No pending applications</h3><p>New coach signups will appear here for your review.</p></div>';
+
+  return `<div class="table-wrap"><table>
+    <thead><tr><th>Coach</th><th>Location</th><th>Rate</th><th>PGA</th><th>Applied</th><th>Actions</th></tr></thead>
+    <tbody>${pending.map(c=>{
+      const loc=locations.find(l=>l.id===c.location_id);
+      const locName=loc?loc.name:(c.custom_facility_name||'—');
+      const date=new Date(c.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+      const photoSrc=c.photo_url||"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36'%3E%3Crect width='36' height='36' rx='18' fill='%2314442b'/%3E%3Ctext x='50%25' y='55%25' text-anchor='middle' fill='white' font-size='14' font-family='Arial'%3E"+(c.first_name||'').charAt(0)+(c.last_name||'').charAt(0)+"%3C/text%3E%3C/svg%3E";
+      return `<tr>
+        <td><img class="coach-photo" src="${photoSrc}"><span class="coach-name">${c.first_name} ${c.last_name}</span><br><span class="coach-email">${c.email}</span></td>
+        <td>${locName}</td>
+        <td>$${c.price}/hr</td>
+        <td>${c.pga_certified?'✓':'—'}</td>
+        <td>${date}</td>
+        <td>
+          <button class="action-btn btn-view" onclick='viewCoach("${c.id}")'>View</button>
+          <button class="action-btn btn-approve" onclick='approveCoach("${c.id}")'>Approve</button>
+          <button class="action-btn btn-reject" onclick='rejectCoach("${c.id}")'>Reject</button>
+        </td>
+      </tr>`}).join('')}</tbody>
+  </table></div>`;
+}
+
+// ══════════════════════════════════════
+// ALL COACHES TAB
+// ══════════════════════════════════════
+function renderCoaches(){
+  const real=coaches.filter(c=>!c.is_demo);
+  if(!real.length) return '<div class="empty"><h3>No coaches yet</h3><p>Coach signups will appear here.</p></div>';
+
+  return `<div class="table-wrap"><table>
+    <thead><tr><th>Coach</th><th>Location</th><th>Rate</th><th>Rating</th><th>Bookings</th><th>Status</th><th>Actions</th></tr></thead>
+    <tbody>${real.map(c=>{
+      const loc=locations.find(l=>l.id===c.location_id);
+      const locName=loc?loc.name:(c.custom_facility_name||'—');
+      const coachBookings=bookings.filter(b=>b.coach_id===c.id).length;
+      const statusClass=c.status==='approved'?'s-approved':c.status==='rejected'?'s-rejected':'s-pending';
+      const photoSrc=c.photo_url||"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36'%3E%3Crect width='36' height='36' rx='18' fill='%2314442b'/%3E%3Ctext x='50%25' y='55%25' text-anchor='middle' fill='white' font-size='14' font-family='Arial'%3E"+(c.first_name||'').charAt(0)+(c.last_name||'').charAt(0)+"%3C/text%3E%3C/svg%3E";
+      return `<tr>
+        <td><img class="coach-photo" src="${photoSrc}"><span class="coach-name">${c.first_name} ${c.last_name}</span><br><span class="coach-email">${c.email}</span></td>
+        <td>${locName}</td>
+        <td>$${c.price}/hr</td>
+        <td>${c.rating>0?'★ '+c.rating:'—'}</td>
+        <td>${coachBookings}</td>
+        <td><span class="status-badge ${statusClass}">${c.status}</span></td>
+        <td>
+          <button class="action-btn btn-view" onclick='viewCoach("${c.id}")'>View</button>
+          ${c.status!=='approved'?`<button class="action-btn btn-approve" onclick='approveCoach("${c.id}")'>Approve</button>`:''}
+          ${c.status!=='rejected'?`<button class="action-btn btn-reject" onclick='rejectCoach("${c.id}")'>Reject</button>`:''}
+        </td>
+      </tr>`}).join('')}</tbody>
+  </table></div>`;
+}
+
+// ══════════════════════════════════════
+// BOOKINGS TAB
+// ══════════════════════════════════════
+function renderBookings(){
+  if(!bookings.length) return '<div class="empty"><h3>No bookings yet</h3><p>Student bookings will appear here.</p></div>';
+
+  return `<div class="table-wrap"><table>
+    <thead><tr><th>Student</th><th>Coach</th><th>Date & Time</th><th>Location</th><th>Status</th></tr></thead>
+    <tbody>${bookings.map(b=>{
+      const coach=coaches.find(c=>c.id===b.coach_id);
+      const loc=locations.find(l=>l.id===b.location_id);
+      const coachName=coach?coach.first_name+' '+coach.last_name:'Unknown';
+      const dateStr=new Date(b.booking_date+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+      const statusClass='s-'+b.status;
+      return `<tr>
+        <td><span class="coach-name">${b.student_name}</span><br><span class="coach-email">${b.student_email}</span></td>
+        <td>${coachName}</td>
+        <td>${dateStr} at ${b.booking_time}</td>
+        <td>${loc?loc.name:'—'}</td>
+        <td><span class="status-badge ${statusClass}">${b.status}</span></td>
+      </tr>`}).join('')}</tbody>
+  </table></div>`;
+}
+
+// ══════════════════════════════════════
+// LOCATIONS TAB
+// ══════════════════════════════════════
+function renderLocations(){
+  const coachesWithCustom=coaches.filter(c=>c.custom_facility_name&&!c.location_id);
+
+  return `
+    ${coachesWithCustom.length?`
+    <div style="background:var(--gold-light);border:1px solid #e8d89c;border-radius:12px;padding:16px 20px;margin-bottom:20px">
+      <strong style="font-size:14px">Unlisted facilities from coach applications:</strong>
+      ${coachesWithCustom.map(c=>`<div style="margin-top:8px;font-size:13px">• <strong>${c.custom_facility_name}</strong> — ${c.custom_facility_address||'No address'} (${c.first_name} ${c.last_name})</div>`).join('')}
+    </div>`:''}
+
+    <div style="background:var(--card);border-radius:12px;padding:24px;border:1px solid var(--border-light);margin-bottom:20px">
+      <h3 style="font-size:16px;font-weight:700;margin-bottom:16px">Add New Location</h3>
+      <div class="add-loc-form">
+        <div class="fl"><label>Location ID</label><input id="nl-id" placeholder="e.g. scratch-golf"></div>
+        <div class="fl"><label>Name</label><input id="nl-name" placeholder="e.g. Scratch Golf Club"></div>
+        <div class="fl"><label>City</label><input id="nl-city" placeholder="e.g. Dallas"></div>
+        <div class="fl"><label>Address</label><input id="nl-addr" placeholder="e.g. 5401 W Lovers Ln"></div>
+        <div class="fl"><label>Latitude</label><input id="nl-lat" type="number" step="0.0001" placeholder="32.8483"></div>
+        <div class="fl"><label>Longitude</label><input id="nl-lng" type="number" step="0.0001" placeholder="-96.8207"></div>
+        <div class="add-loc-full">
+          <button class="btn" style="width:auto;padding:10px 24px" onclick="addLocation()">Add Location</button>
+          <span id="loc-msg" style="margin-left:12px;font-size:13px"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-wrap"><table>
+      <thead><tr><th>Name</th><th>City</th><th>Coaches</th><th>ID</th></tr></thead>
+      <tbody>${locations.map(l=>{
+        const count=coaches.filter(c=>c.location_id===l.id).length;
+        return `<tr>
+          <td class="coach-name">${l.name}</td>
+          <td>${l.city}</td>
+          <td>${count||'—'}</td>
+          <td><span class="coach-email">${l.id}</span></td>
+        </tr>`}).join('')}</tbody>
+    </table></div>`;
+}
+
+async function addLocation(){
+  const id=document.getElementById('nl-id').value.trim();
+  const name=document.getElementById('nl-name').value.trim();
+  const city=document.getElementById('nl-city').value.trim();
+  const lat=parseFloat(document.getElementById('nl-lat').value);
+  const lng=parseFloat(document.getElementById('nl-lng').value);
+  const msg=document.getElementById('loc-msg');
+
+  if(!id||!name||!city||!lat||!lng){msg.textContent='Fill in all fields.';msg.style.color='var(--danger)';return}
+
+  const {error}=await sb.from('locations').insert({id,name,lat,lng,city,address:document.getElementById('nl-addr').value.trim()});
+  if(error){msg.textContent='Error: '+error.message;msg.style.color='var(--danger)';return}
+
+  msg.textContent='✓ Location added!';msg.style.color='var(--success)';
+  await loadData();
+  renderDashboard();
+}
+
+// ══════════════════════════════════════
+// COACH ACTIONS
+// ══════════════════════════════════════
+function viewCoach(id){
+  const c=coaches.find(x=>x.id===id);
+  if(!c) return;
+  const loc=locations.find(l=>l.id===c.location_id);
+  const locName=loc?loc.name:(c.custom_facility_name||'Not set');
+  const photoSrc=c.photo_url||"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Crect width='80' height='80' rx='40' fill='%2314442b'/%3E%3Ctext x='50%25' y='55%25' text-anchor='middle' fill='white' font-size='28' font-family='Arial'%3E"+(c.first_name||'').charAt(0)+(c.last_name||'').charAt(0)+"%3C/text%3E%3C/svg%3E";
+  const sched=c.schedule||{};
+  const totalSlots=Object.values(sched).reduce((a,b)=>a+(b?b.length:0),0);
+  const schedText=Object.entries(sched).filter(([,s])=>s&&s.length).map(([d,s])=>d+': '+s.join(', ')).join('\n')||'Not set';
+
+  const modal=document.createElement('div');
+  modal.className='modal-bg';
+  modal.onclick=e=>{if(e.target===modal)modal.remove()};
+  modal.innerHTML=`
+    <div class="modal">
+      <div class="modal-header">
+        <h2>${c.first_name} ${c.last_name}</h2>
+        <button class="modal-close" onclick="this.closest('.modal-bg').remove()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="text-align:center;margin-bottom:20px">
+          <img src="${photoSrc}" style="width:80px;height:80px;border-radius:50%;object-fit:cover">
+        </div>
+        <div class="detail-row"><div class="detail-label">Email</div><div class="detail-value">${c.email}</div></div>
+        <div class="detail-row"><div class="detail-label">Phone</div><div class="detail-value">${c.phone||'—'}</div></div>
+        <div class="detail-row"><div class="detail-label">Instagram</div><div class="detail-value">${c.instagram||'—'}</div></div>
+        <div class="detail-row"><div class="detail-label">Location</div><div class="detail-value">${locName}${c.custom_facility_address?'<br><span style="color:var(--text-muted);font-size:12px">'+c.custom_facility_address+'</span>':''}</div></div>
+        <div class="detail-row"><div class="detail-label">Rate</div><div class="detail-value">$${c.price}/hr</div></div>
+        <div class="detail-row"><div class="detail-label">PGA Certified</div><div class="detail-value">${c.pga_certified?'Yes':'No'}</div></div>
+        <div class="detail-row"><div class="detail-label">Experience</div><div class="detail-value">${c.years_experience||0} years</div></div>
+        <div class="detail-row"><div class="detail-label">Specialties</div><div class="detail-value">${(c.specialties||[]).join(', ')||'—'}</div></div>
+        <div class="detail-row"><div class="detail-label">Availability</div><div class="detail-value">${totalSlots} slots set</div></div>
+        <div class="detail-row"><div class="detail-label">Short Bio</div><div class="detail-value">${c.short_bio||'—'}</div></div>
+        <div class="detail-row"><div class="detail-label">Full Bio</div><div class="detail-value" style="white-space:pre-wrap">${c.full_bio||'—'}</div></div>
+        <div class="detail-row"><div class="detail-label">Status</div><div class="detail-value"><span class="status-badge s-${c.status}">${c.status}</span></div></div>
+        <div class="detail-row"><div class="detail-label">Applied</div><div class="detail-value">${new Date(c.created_at).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}</div></div>
+      </div>
+      <div class="modal-actions">
+        ${c.status!=='approved'?`<button class="action-btn btn-approve" onclick="approveCoach('${c.id}');this.closest('.modal-bg').remove()">Approve</button>`:''}
+        ${c.status!=='rejected'?`<button class="action-btn btn-reject" onclick="rejectCoach('${c.id}');this.closest('.modal-bg').remove()">Reject</button>`:''}
+        <button class="action-btn btn-view" onclick="this.closest('.modal-bg').remove()">Close</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+async function approveCoach(id){
+  const {error}=await sb.rpc('approve_coach',{coach_uuid:id});
+  if(error){alert('Error: '+error.message);return}
+  const c=coaches.find(x=>x.id===id);
+  if(c)c.status='approved';
+  renderDashboard();
+}
+
+async function rejectCoach(id){
+  if(!confirm('Reject this coach application?'))return;
+  const {error}=await sb.rpc('reject_coach',{coach_uuid:id});
+  if(error){alert('Error: '+error.message);return}
+  const c=coaches.find(x=>x.id===id);
+  if(c)c.status='rejected';
+  renderDashboard();
+}
+
+// ══════════════════════════════════════
+init();
+</script>
+</body>
+</html>
