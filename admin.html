@@ -468,7 +468,11 @@ async function approveCoach(id){
   const {error}=await sb.rpc('approve_coach',{coach_uuid:id});
   if(error){alert('Error: '+error.message);return}
   const c=coaches.find(x=>x.id===id);
-  if(c)c.status='approved';
+  if(c){
+    c.status='approved';
+    // Send approval email
+    fetch('/api/send-email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'coach_approved',data:{coachName:c.first_name+' '+c.last_name,coachEmail:c.email}})}).catch(e=>console.error('Email error:',e));
+  }
   renderDashboard();
 }
 
