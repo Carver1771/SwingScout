@@ -372,6 +372,10 @@ function renderProfileTab(){
       </div>
       <div class="fl"><label>Phone</label><input id="e-phone" value="${c.phone||''}" placeholder="(214) 555-0123"></div>
       <div class="fl"><label>Instagram</label><input id="e-insta" value="${c.instagram||''}" placeholder="@yourhandle"></div>
+      <div class="fl"><label>Website</label><input id="e-website" value="${c.website||''}" placeholder="https://yoursite.com"></div>
+      <div class="fl"><label>LinkedIn</label><input id="e-linkedin" value="${c.linkedin||''}" placeholder="https://linkedin.com/in/yourname"></div>
+      <div class="fl"><label>Certifications & Credentials</label><input id="e-certs" value="${c.certifications||''}" placeholder="e.g. TPI Certified, TrackMan Master, USGTF Level III" maxlength="200"></div>
+      <div class="fl"><label>Notable Achievements / Press</label><textarea id="e-achievements" rows="3" placeholder="Awards, media features, notable students, tournament results, etc.">${c.achievements||''}</textarea></div>
       <div class="fl"><label>Hourly Rate ($)</label><input id="e-price" type="number" value="${c.price||100}" min="25" max="500"></div>
       <div class="fl">
         <label>Location</label>
@@ -472,6 +476,10 @@ async function saveProfile(){
     last_name:document.getElementById('e-last').value.trim(),
     phone:document.getElementById('e-phone').value.trim(),
     instagram:document.getElementById('e-insta').value.trim(),
+    website:document.getElementById('e-website').value.trim(),
+    linkedin:document.getElementById('e-linkedin').value.trim(),
+    certifications:document.getElementById('e-certs').value.trim(),
+    achievements:document.getElementById('e-achievements').value.trim(),
     price:parseInt(document.getElementById('e-price').value)||100,
     location_id:isOther?null:locVal||null,
     custom_facility_name:isOther?(document.getElementById('e-facname').value.trim()||null):null,
