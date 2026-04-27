@@ -294,6 +294,23 @@ async function loadCoachData(){
 // ══════════════════════════════════════
 function renderDashboard(){
   if(!coachProfile){
+    // Profile missing (possibly deleted) - create a new one
+    sb.from('coaches').insert({
+      user_id:currentUser.id,
+      first_name:currentUser.email.split('@')[0],
+      last_name:'',
+      email:currentUser.email,
+      price:100,
+      status:'pending',
+      schedule:{},
+      specialties:[]
+    }).then(async ()=>{
+      await loadCoachData();
+      if(coachProfile) renderDashboard();
+      else {
+        app.innerHTML='<div class="auth-wrap"><div class="auth-card"><h1 class="auth-title">Something went wrong</h1><p class="auth-sub">We couldn\'t set up your profile. Please try signing out and signing up again.</p><button class="btn" onclick="logout()" style="margin-top:16px">Sign Out</button></div></div>';
+      }
+    });
     app.innerHTML='<div class="loading">Setting up your profile...</div>';
     return;
   }
