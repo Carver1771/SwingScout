@@ -448,7 +448,7 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:#fafaf8;color:#1a1a1a
   <div class="header-divider"></div>
   <div class="header-search"><span class="s-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg></span><input type="text" id="search-input" placeholder="Search by name, city, or ZIP code..." oninput="sq=this.value;renderAll()"><button class="s-clear" id="s-clear" onclick="sq='';document.getElementById('search-input').value='';renderAll()" style="display:none">✕</button></div>
   <div class="header-filters" id="hf"></div>
-  <nav class="nav-links" id="nav"><a class="nav-link" onclick="document.getElementById('how').scrollIntoView({behavior:'smooth'});closeNav()">How It Works</a><a class="nav-link" onclick="showCoachSignup();closeNav()">Teach on Swingable Golf</a><a class="nav-link" href="/coach.html">Coach Login</a><a class="nav-link" onclick="showContact();closeNav()">Contact</a></nav>
+  <nav class="nav-links" id="nav"><a class="nav-link" onclick="document.getElementById('how').scrollIntoView({behavior:'smooth'});closeNav()">How It Works</a><a class="nav-link" href="/coach.html">For Coaches</a><a class="nav-link" onclick="showContact();closeNav()">Contact</a></nav>
   <button class="hamburger" onclick="toggleNav()" aria-label="Menu"><svg id="ham" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h18M3 6h18M3 18h18"/></svg></button>
 </div></header>
 
@@ -471,7 +471,7 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:#fafaf8;color:#1a1a1a
   <div class="list-pane">
     <div class="growing-banner" id="growing-banner">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83"/></svg>
-      Featured coaches — more joining weekly. <a onclick="showCoachSignup()">Apply to teach</a>
+      Featured coaches — more joining weekly. <a href="/coach.html">Apply to teach</a>
       <button class="banner-x" onclick="document.getElementById('growing-banner').style.display='none'">✕</button>
     </div>
     <div class="mobile-filters" id="mf"></div>
@@ -514,7 +514,7 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:#fafaf8;color:#1a1a1a
 <section class="coach-cta"><div class="coach-cta-inner">
   <h2>Are you a golf instructor?</h2>
   <p>Join Swingable Golf and connect with students across DFW. Set your own rates and grow your teaching business.</p>
-  <button class="coach-cta-btn" onclick="showCoachSignup()">Apply to Teach</button>
+  <button class="coach-cta-btn" onclick="window.location.href='/coach.html'">Apply to Teach</button>
   <p class="coach-cta-sub">Takes under 3 minutes · No commitment required</p>
 </div></section>
 
@@ -522,7 +522,7 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:#fafaf8;color:#1a1a1a
   <div class="footer-top">
     <div class="footer-brand"><div class="logo-text">Swingable Golf</div><p>The easiest way to find and book golf instruction across Dallas–Fort Worth.</p></div>
     <div class="footer-links">
-      <div class="footer-col"><h4>Product</h4><a onclick="window.scrollTo({top:0,behavior:'smooth'})">Browse Instructors</a><a onclick="document.getElementById('how').scrollIntoView({behavior:'smooth'})">How It Works</a><a onclick="showCoachSignup()">Become an Instructor</a></div>
+      <div class="footer-col"><h4>Product</h4><a onclick="window.scrollTo({top:0,behavior:'smooth'})">Browse Instructors</a><a onclick="document.getElementById('how').scrollIntoView({behavior:'smooth'})">How It Works</a><a href="/coach.html">Become an Instructor</a></div>
       <div class="footer-col"><h4>Company</h4><a onclick="showAbout()" style="cursor:pointer">About</a><a onclick="showContact()" style="cursor:pointer">Contact Us</a></div>
       <div class="footer-col"><h4>Legal</h4><a onclick="showPrivacy()" style="cursor:pointer">Privacy Policy</a><a onclick="showTerms()" style="cursor:pointer">Terms of Service</a></div>
     </div>
