@@ -246,6 +246,9 @@ async function handleAuth(mode){
     });
     if(profErr)console.error('Profile creation error:',profErr);
 
+    // Send notification emails
+    fetch('/api/send-email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'coach_application',data:{coachName:first+' '+last,coachEmail:email,location:'Not set yet',price:100,specialties:'Not set yet'}})}).catch(e=>console.error('Email error:',e));
+
     await loadCoachData();
     renderDashboard();
 
