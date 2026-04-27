@@ -155,7 +155,8 @@ const sb=window.supabase.createClient(SB_URL,SB_KEY);
 const app=document.getElementById('app');
 const DAYS=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 const TIMES=['6:00 AM','7:00 AM','8:00 AM','9:00 AM','10:00 AM','11:00 AM','12:00 PM','1:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM','6:00 PM','7:00 PM'];
-const ALL_SPECS=["Short Game","Swing Mechanics","Putting","Driving","Course Strategy","Mental Game","Beginners","Junior Golf","Women's Golf","Group Lessons","Video Analysis","TrackMan","Golf Fitness","Competition Prep","Slice Fixing","Corporate Events"];
+const ALL_SPECS=["Short Game","Swing Mechanics","Putting","Driving","Course Strategy","Mental Game","Beginners","Junior Golf","Women's Golf","Group Lessons","Video Analysis","TrackMan","Golf Fitness","Competition Prep","Slice Fixing","Corporate Events","On-Course Playing","Club Fitting","Wedge Play","Bunker Play","Long Irons","Scoring","Speed Training","Senior Golf"];
+const MAX_SPECS=4;
 
 let currentUser=null;
 let coachProfile=null;
@@ -343,10 +344,10 @@ function renderProfileTab(){
   return `
     <div class="card">
       <div class="profile-preview">
-        <img class="profile-photo" src="${photoSrc}">
+        <img class="profile-photo" src="${photoSrc}" id="preview-photo">
         <div class="profile-info">
           <div class="profile-name">${c.first_name} ${c.last_name}</div>
-          <div class="profile-meta">${loc?loc.name:'No location set'} · $${c.price}/hr${c.pga_certified?' · PGA Certified':''}</div>
+          <div class="profile-meta">${loc?loc.name:(c.custom_facility_name||'No location set')} · $${c.price}/hr${c.pga_certified?' · PGA Certified':''}</div>
           <div class="profile-bio">${c.short_bio||'No bio yet — add one below!'}</div>
         </div>
       </div>
@@ -354,6 +355,17 @@ function renderProfileTab(){
 
     <div class="card">
       <div class="card-title">Edit Profile</div>
+      <div class="fl">
+        <label>Profile Photo</label>
+        <div style="display:flex;align-items:center;gap:16px">
+          <img src="${photoSrc}" style="width:60px;height:60px;border-radius:50%;object-fit:cover;border:2px solid var(--border-light)" id="photo-thumb">
+          <div>
+            <input type="file" id="photo-input" accept="image/*" onchange="uploadPhoto()" style="display:none">
+            <button class="btn btn-outline btn-sm" onclick="document.getElementById('photo-input').click()">Upload Photo</button>
+            <div id="photo-msg" style="font-size:12px;color:var(--text-muted);margin-top:4px"></div>
+          </div>
+        </div>
+      </div>
       <div style="display:flex;gap:12px">
         <div class="fl" style="flex:1"><label>First Name</label><input id="e-first" value="${c.first_name||''}"></div>
         <div class="fl" style="flex:1"><label>Last Name</label><input id="e-last" value="${c.last_name||''}"></div>
@@ -363,10 +375,15 @@ function renderProfileTab(){
       <div class="fl"><label>Hourly Rate ($)</label><input id="e-price" type="number" value="${c.price||100}" min="25" max="500"></div>
       <div class="fl">
         <label>Location</label>
-        <select id="e-loc">
+        <select id="e-loc" onchange="handleLocChange()">
           <option value="">Select a venue</option>
           ${locations.map(l=>`<option value="${l.id}" ${c.location_id===l.id?'selected':''}>${l.name} — ${l.city}</option>`).join('')}
+          <option value="other" ${c.location_id==='other'||(!c.location_id&&c.custom_facility_name)?'selected':''}>Other — My facility isn't listed</option>
         </select>
+      </div>
+      <div id="custom-loc" style="display:${c.custom_facility_name?'block':'none'}">
+        <div class="fl"><label>Facility Name</label><input id="e-facname" value="${(c.custom_facility_name||'').replace(/"/g,'&quot;')}" placeholder="e.g. Brookhaven Country Club"></div>
+        <div class="fl"><label>Facility Address</label><input id="e-facaddr" value="${(c.custom_facility_address||'').replace(/"/g,'&quot;')}" placeholder="e.g. 3333 Golfing Green Dr, Dallas, TX 75234"></div>
       </div>
       <div class="fl"><label>Short Bio (one line)</label><input id="e-sbio" value="${(c.short_bio||'').replace(/"/g,'&quot;')}" maxlength="120" placeholder="Brief description of your coaching style"></div>
       <div class="fl"><label>Full Bio</label><textarea id="e-fbio" rows="5" placeholder="Tell students about your experience, teaching philosophy, and what they can expect...">${c.full_bio||''}</textarea></div>
@@ -382,7 +399,7 @@ function renderProfileTab(){
         <input id="e-yrs" type="number" value="${c.years_experience||0}" min="0" max="50">
       </div>
       <div class="fl">
-        <label>Specialties (pick up to 5)</label>
+        <label id="spec-label">Specialties (${(c.specialties||[]).length}/${MAX_SPECS})</label>
         <div class="spec-grid" id="spec-grid">
           ${ALL_SPECS.map(s=>`<div class="spec-pill ${(c.specialties||[]).includes(s)?'active':''}" onclick="toggleEditSpec('${s}')">${s}</div>`).join('')}
         </div>
@@ -396,12 +413,50 @@ function toggleEditSpec(s){
   const specs=coachProfile.specialties||[];
   const idx=specs.indexOf(s);
   if(idx>-1)specs.splice(idx,1);
-  else if(specs.length<5)specs.push(s);
+  else if(specs.length<MAX_SPECS)specs.push(s);
   coachProfile.specialties=specs;
-  // Update pills
   document.querySelectorAll('.spec-pill').forEach(el=>{
     el.classList.toggle('active',specs.includes(el.textContent));
   });
+  const lbl=document.getElementById('spec-label');
+  if(lbl)lbl.textContent='Specialties ('+specs.length+'/'+MAX_SPECS+')';
+}
+
+function handleLocChange(){
+  const val=document.getElementById('e-loc').value;
+  const customDiv=document.getElementById('custom-loc');
+  if(customDiv)customDiv.style.display=val==='other'?'block':'none';
+}
+
+async function uploadPhoto(){
+  const input=document.getElementById('photo-input');
+  const msg=document.getElementById('photo-msg');
+  const file=input.files[0];
+  if(!file)return;
+
+  if(file.size>5*1024*1024){msg.textContent='Photo must be under 5MB';msg.style.color='var(--danger)';return}
+
+  msg.textContent='Uploading...';msg.style.color='var(--text-muted)';
+
+  const ext=file.name.split('.').pop();
+  const fileName=coachProfile.id+'-'+Date.now()+'.'+ext;
+
+  const {data,error}=await sb.storage.from('coach-photos').upload(fileName,file,{upsert:true});
+
+  if(error){msg.textContent='Upload failed: '+error.message;msg.style.color='var(--danger)';return}
+
+  const {data:urlData}=sb.storage.from('coach-photos').getPublicUrl(fileName);
+  const photoUrl=urlData.publicUrl;
+
+  const {error:updateErr}=await sb.from('coaches').update({photo_url:photoUrl,updated_at:new Date().toISOString()}).eq('id',coachProfile.id);
+
+  if(updateErr){msg.textContent='Save failed: '+updateErr.message;msg.style.color='var(--danger)';return}
+
+  coachProfile.photo_url=photoUrl;
+  document.getElementById('photo-thumb').src=photoUrl;
+  document.getElementById('preview-photo').src=photoUrl;
+  msg.textContent='✓ Photo uploaded!';msg.style.color='var(--success)';
+  setTimeout(()=>{msg.textContent=''},3000);
 }
 
 async function saveProfile(){
@@ -409,13 +464,18 @@ async function saveProfile(){
   const msg=document.getElementById('save-msg');
   btn.disabled=true;btn.textContent='Saving...';
 
+  const locVal=document.getElementById('e-loc').value;
+  const isOther=locVal==='other';
+
   const updates={
     first_name:document.getElementById('e-first').value.trim(),
     last_name:document.getElementById('e-last').value.trim(),
     phone:document.getElementById('e-phone').value.trim(),
     instagram:document.getElementById('e-insta').value.trim(),
     price:parseInt(document.getElementById('e-price').value)||100,
-    location_id:document.getElementById('e-loc').value||null,
+    location_id:isOther?null:locVal||null,
+    custom_facility_name:isOther?(document.getElementById('e-facname').value.trim()||null):null,
+    custom_facility_address:isOther?(document.getElementById('e-facaddr').value.trim()||null):null,
     short_bio:document.getElementById('e-sbio').value.trim(),
     full_bio:document.getElementById('e-fbio').value.trim(),
     pga_certified:document.getElementById('e-pga').checked,
