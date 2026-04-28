@@ -97,7 +97,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .badge-cancelled{background:#f8d7da;color:#721c24}
 
 /* Availability Grid */
-.avail-grid{display:grid;grid-template-columns:auto repeat(14,1fr);gap:2px;font-size:11px;overflow-x:auto}
+.avail-grid{display:grid;grid-template-columns:80px repeat(7,1fr);gap:2px;font-size:12px}
 .avail-day{font-weight:600;padding:6px 8px;text-align:right;color:var(--text-secondary)}
 .avail-time{text-align:center;padding:4px 2px;color:var(--text-muted);font-size:10px}
 .avail-cell{text-align:center;padding:6px 4px;border-radius:4px;cursor:pointer;transition:all .15s;font-size:10px;user-select:none}
@@ -359,6 +359,7 @@ function renderTabContent(){
 function renderProfileTab(){
   const c=coachProfile;
   const loc=locations.find(l=>l.id===c.location_id);
+  const canEdit=c.status==='approved'||!c.profile_submitted;
   const photoSrc=c.photo_url||"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect width='200' height='200' fill='%2314442b'/%3E%3Ctext x='50%25' y='55%25' text-anchor='middle' fill='white' font-size='48' font-family='Arial'%3E"+(c.first_name||'').charAt(0)+(c.last_name||'').charAt(0)+"%3C/text%3E%3C/svg%3E";
 
   return `
@@ -428,7 +429,13 @@ function renderProfileTab(){
           ${ALL_SPECS.map(s=>`<div class="spec-pill ${(c.specialties||[]).includes(s)?'active':''}" onclick="toggleEditSpec('${s}')">${s}</div>`).join('')}
         </div>
       </div>
-      <button class="btn" onclick="saveProfile()" id="save-btn">Save Changes</button>
+      \${canEdit?
+        (coachProfile.status==='approved'?
+          '<button class="btn" onclick="saveProfile()" id="save-btn">Save Changes</button>':
+          '<button class="btn" onclick="saveProfile()" id="save-btn" style="margin-bottom:10px">Save Draft</button><button class="btn btn-gold" onclick="submitForReview()" id="submit-btn">Submit for Review</button>'
+        ):
+        '<div style="background:var(--gold-light);padding:16px;border-radius:10px;text-align:center;font-size:14px;color:var(--brand-dark)"><strong>Profile submitted for review.</strong> We\'ll notify you once approved.</div>'
+      }
       <div id="save-msg" style="text-align:center;margin-top:12px;font-size:14px"></div>
     </div>`;
 }
@@ -524,20 +531,33 @@ async function saveProfile(){
   btn.disabled=false;btn.textContent='Save Changes';
 }
 
+async function submitForReview(){
+  const btn=document.getElementById('submit-btn');
+  const msg=document.getElementById('save-msg');
+  await saveProfile();
+  btn.disabled=true;btn.textContent='Submitting...';
+  const {error}=await sb.from('coaches').update({profile_submitted:true,updated_at:new Date().toISOString()}).eq('id',coachProfile.id);
+  if(error){msg.innerHTML='<span style="color:var(--danger)">Error: '+error.message+'</span>';btn.disabled=false;btn.textContent='Submit for Review';return}
+  coachProfile.profile_submitted=true;
+  fetch('/api/send-email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'coach_application',data:{coachName:coachProfile.first_name+' '+coachProfile.last_name,coachEmail:coachProfile.email,location:coachProfile.location_id||coachProfile.custom_facility_name||'Not set',price:coachProfile.price,specialties:(coachProfile.specialties||[]).join(', ')}})}).catch(e=>console.error('Email error:',e));
+  renderDashboard();
+}
+
 // ══════════════════════════════════════
 // AVAILABILITY TAB
 // ══════════════════════════════════════
 function renderAvailTab(){
   const sched=coachProfile.schedule||{};
+  const canEdit=coachProfile.status==='approved'||!coachProfile.profile_submitted;
   
-  let grid='<div class="avail-grid"><div></div>';
-  TIMES.forEach(t=>{grid+=`<div class="avail-time">${t.replace(':00','').replace(' ','')}</div>`});
+  let grid='<div class="avail-grid"><div class="avail-day"></div>';
+  DAYS.forEach(d=>{grid+=`<div class="avail-day" style="text-align:center;font-weight:700">${d}</div>`});
   
-  DAYS.forEach(day=>{
-    grid+=`<div class="avail-day">${day}</div>`;
-    TIMES.forEach(t=>{
-      const active=sched[day]&&sched[day].includes(t);
-      grid+=`<div class="avail-cell ${active?'active':''}" onclick="toggleAvail('${day}','${t}')">${active?'✓':''}</div>`;
+  TIMES.forEach(t=>{
+    grid+=`<div class="avail-time">${t}</div>`;
+    DAYS.forEach(d=>{
+      const active=sched[d]&&sched[d].includes(t);
+      grid+=`<div class="avail-cell ${active?'active':''}" ${canEdit?`onclick="toggleAvail('${d}','${t}')"`:''}>${active?'\u2713':''}</div>`;
     });
   });
   grid+='</div>';
@@ -549,8 +569,8 @@ function renderAvailTab(){
       <div class="card-title">Weekly Availability</div>
       <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">Click cells to toggle your available time slots. <strong>${totalSlots} slots</strong> currently set.</p>
       ${grid}
-      <button class="btn" style="margin-top:20px" onclick="saveAvailability()" id="avail-btn">Save Availability</button>
-      <div id="avail-msg" style="text-align:center;margin-top:12px;font-size:14px"></div>
+      ${canEdit?`<button class="btn" style="margin-top:20px" onclick="saveAvailability()" id="avail-btn">Save Availability</button>
+      <div id="avail-msg" style="text-align:center;margin-top:12px;font-size:14px"></div>`:''}
     </div>`;
 }
 
@@ -563,18 +583,16 @@ function toggleAvail(day,time){
   sched[day].sort((a,b)=>TIMES.indexOf(a)-TIMES.indexOf(b));
   coachProfile.schedule=sched;
 
-  // Update the cell without re-rendering
   const cells=document.querySelectorAll('.avail-cell');
   let cellIdx=0;
-  DAYS.forEach(d=>{
-    TIMES.forEach(t=>{
+  TIMES.forEach(t=>{
+    DAYS.forEach(d=>{
       const isActive=sched[d]&&sched[d].includes(t);
       cells[cellIdx].className='avail-cell'+(isActive?' active':'');
-      cells[cellIdx].textContent=isActive?'✓':'';
+      cells[cellIdx].textContent=isActive?'\u2713':'';
       cellIdx++;
     });
   });
-  // Update count
   const totalSlots=Object.values(sched).reduce((a,b)=>a+(b?b.length:0),0);
   document.querySelector('.card-title+p strong').textContent=totalSlots+' slots';
 }
@@ -610,12 +628,18 @@ function renderBookingsTab(){
     const loc=locations.find(l=>l.id===b.location_id);
     const badgeClass='badge-'+b.status;
     const dateStr=new Date(b.booking_date+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+    const actions=b.status==='pending'?`
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button style="padding:6px 16px;background:var(--success);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer" onclick="updateBooking('${b.id}','confirmed')">Approve</button>
+        <button style="padding:6px 16px;background:var(--danger);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer" onclick="updateBooking('${b.id}','cancelled')">Decline</button>
+      </div>`:'';
     return `
-      <div class="booking-item">
+      <div class="booking-item" style="flex-wrap:wrap">
         <div class="booking-details">
           <div class="booking-student">${b.student_name}</div>
-          <div class="booking-time">${dateStr} at ${b.booking_time}${loc?' · '+loc.name:''}</div>
-          <div class="booking-time">${b.student_email}${b.student_phone?' · '+b.student_phone:''}</div>
+          <div class="booking-time">${dateStr} at ${b.booking_time}${loc?' \u00b7 '+loc.name:''}</div>
+          <div class="booking-time">${b.student_email}${b.student_phone?' \u00b7 '+b.student_phone:''}</div>
+          ${actions}
         </div>
         <span class="booking-badge ${badgeClass}">${b.status}</span>
       </div>`;
@@ -626,6 +650,19 @@ function renderBookingsTab(){
       <div class="card-title">Your Bookings (${coachBookings.length})</div>
       ${items}
     </div>`;
+}
+
+async function updateBooking(bookingId,newStatus){
+  const {error}=await sb.from('bookings').update({status:newStatus}).eq('id',bookingId);
+  if(error){alert('Error: '+error.message);return}
+  const b=coachBookings.find(x=>x.id===bookingId);
+  if(b){
+    b.status=newStatus;
+    const loc=locations.find(l=>l.id===b.location_id);
+    const dateStr=new Date(b.booking_date+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+    fetch('/api/send-email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:newStatus==='confirmed'?'booking_confirmed':'booking_declined',data:{studentName:b.student_name,studentEmail:b.student_email,coachName:coachProfile.first_name+' '+coachProfile.last_name,date:dateStr,time:b.booking_time,location:loc?loc.name:''}})}).catch(e=>console.error('Email error:',e));
+  }
+  document.getElementById('tab-content').innerHTML=renderBookingsTab();
 }
 
 // ══════════════════════════════════════
