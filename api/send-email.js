@@ -167,6 +167,58 @@ export default async function handler(req, res) {
             <p style="color:#999;font-size:12px;text-align:center">Swingable Golf — Find golf coaches in Dallas–Fort Worth<br><a href="https://swingablegolf.com" style="color:#1b5e3b">swingablegolf.com</a></p>
           </div>`
       });
+    } else if (type === 'booking_confirmed') {
+      const { studentName, studentEmail, coachName, date, time, location } = data;
+
+      emails.push({
+        from: 'Swingable Golf <hello@swingablegolf.com>',
+        to: studentEmail,
+        subject: `Lesson Confirmed! ${date} at ${time}`,
+        html: `
+          <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;padding:24px">
+            <div style="text-align:center;margin-bottom:24px">
+              <h1 style="color:#14442b;font-size:22px;margin:0">Swingable Golf</h1>
+            </div>
+            <h2 style="color:#14442b;font-size:18px">Your lesson is confirmed! &#9989;</h2>
+            <p style="color:#333;line-height:1.6">Hi ${studentName},</p>
+            <p style="color:#333;line-height:1.6">Great news! <strong>${coachName}</strong> has confirmed your lesson.</p>
+            <div style="background:#d4edda;border-radius:10px;padding:20px;margin:20px 0">
+              <table style="width:100%;font-size:14px;color:#333">
+                <tr><td style="padding:6px 0;font-weight:bold;width:100px">Coach</td><td>${coachName}</td></tr>
+                <tr><td style="padding:6px 0;font-weight:bold">Date</td><td>${date}</td></tr>
+                <tr><td style="padding:6px 0;font-weight:bold">Time</td><td>${time}</td></tr>
+                <tr><td style="padding:6px 0;font-weight:bold">Location</td><td>${location}</td></tr>
+              </table>
+            </div>
+            <p style="color:#333;line-height:1.6">See you on the course!</p>
+            <hr style="border:none;border-top:1px solid #e8e6e1;margin:24px 0">
+            <p style="color:#999;font-size:12px;text-align:center">Swingable Golf — Find golf coaches in Dallas&#8211;Fort Worth<br><a href="https://swingablegolf.com" style="color:#1b5e3b">swingablegolf.com</a></p>
+          </div>`
+      });
+
+    } else if (type === 'booking_declined') {
+      const { studentName, studentEmail, coachName, date, time, location } = data;
+
+      emails.push({
+        from: 'Swingable Golf <hello@swingablegolf.com>',
+        to: studentEmail,
+        subject: `Lesson Update — ${coachName}`,
+        html: `
+          <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;padding:24px">
+            <div style="text-align:center;margin-bottom:24px">
+              <h1 style="color:#14442b;font-size:22px;margin:0">Swingable Golf</h1>
+            </div>
+            <h2 style="color:#14442b;font-size:18px">Lesson update</h2>
+            <p style="color:#333;line-height:1.6">Hi ${studentName},</p>
+            <p style="color:#333;line-height:1.6">Unfortunately, <strong>${coachName}</strong> is unable to accommodate your lesson on <strong>${date} at ${time}</strong>${location ? ' at '+location : ''}.</p>
+            <p style="color:#333;line-height:1.6">We encourage you to browse other available coaches or try a different time slot.</p>
+            <div style="text-align:center;margin:24px 0">
+              <a href="https://swingablegolf.com" style="background:#1b5e3b;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:bold;display:inline-block">Find Another Coach</a>
+            </div>
+            <hr style="border:none;border-top:1px solid #e8e6e1;margin:24px 0">
+            <p style="color:#999;font-size:12px;text-align:center">Swingable Golf — Find golf coaches in Dallas&#8211;Fort Worth<br><a href="https://swingablegolf.com" style="color:#1b5e3b">swingablegolf.com</a></p>
+          </div>`
+      });
     }
 
     // Send all emails
