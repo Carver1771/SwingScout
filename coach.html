@@ -429,15 +429,19 @@ function renderProfileTab(){
           ${ALL_SPECS.map(s=>`<div class="spec-pill ${(c.specialties||[]).includes(s)?'active':''}" onclick="toggleEditSpec('${s}')">${s}</div>`).join('')}
         </div>
       </div>
-      \${canEdit?
-        (coachProfile.status==='approved'?
-          '<button class="btn" onclick="saveProfile()" id="save-btn">Save Changes</button>':
-          '<button class="btn" onclick="saveProfile()" id="save-btn" style="margin-bottom:10px">Save Draft</button><button class="btn btn-gold" onclick="submitForReview()" id="submit-btn">Submit for Review</button>'
-        ):
-        '<div style="background:var(--gold-light);padding:16px;border-radius:10px;text-align:center;font-size:14px;color:var(--brand-dark)"><strong>Profile submitted for review.</strong> We\'ll notify you once approved.</div>'
-      }
+      ${renderProfileButtons()}
       <div id="save-msg" style="text-align:center;margin-top:12px;font-size:14px"></div>
     </div>`;
+}
+
+function renderProfileButtons(){
+  if(coachProfile.status==='approved'){
+    return '<button class="btn" onclick="saveProfile()" id="save-btn">Save Changes</button>';
+  } else if(coachProfile.profile_submitted){
+    return '<div style="background:var(--gold-light);padding:16px;border-radius:10px;text-align:center;font-size:14px;color:var(--brand-dark)"><strong>Profile submitted for review.</strong> We\'ll notify you once approved.</div>';
+  } else {
+    return '<button class="btn" onclick="saveProfile()" id="save-btn" style="margin-bottom:10px">Save Draft</button><button class="btn btn-gold" onclick="submitForReview()" id="submit-btn">Submit for Review</button>';
+  }
 }
 
 function toggleEditSpec(s){
