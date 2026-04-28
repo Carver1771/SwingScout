@@ -543,7 +543,7 @@ const sb=window.supabase.createClient(SB_URL,SB_KEY);
 let locations=[];
 let instructors=[];
 
-const gL=id=>locations.find(l=>l.id===id);
+const gL=id=>locations.find(l=>l.id===id)||{id:'unknown',name:'Location TBD',lat:32.82,lng:-96.83,city:'DFW'};
 const gI=id=>instructors.filter(i=>i.lid===id);
 function rs(r){let s='';for(let i=0;i<Math.floor(r);i++)s+='★';if(r-Math.floor(r)>=.5)s+='★';return s}
 
