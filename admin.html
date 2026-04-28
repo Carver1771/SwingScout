@@ -231,7 +231,7 @@ function renderDashboard(){
     <a href="/coach.html" class="header-link">Coach Portal</a>
     <button class="btn-logout" onclick="logout()">Sign Out</button>`;
 
-  const pending=coaches.filter(c=>c.status==='pending'&&!c.is_demo);
+  const pending=coaches.filter(c=>c.status==='pending'&&c.profile_submitted&&!c.is_demo);
   const approved=coaches.filter(c=>c.status==='approved'&&!c.is_demo);
   const demo=coaches.filter(c=>c.is_demo);
   const totalBookings=bookings.length;
@@ -271,8 +271,8 @@ function renderTab(){
 // PENDING TAB
 // ══════════════════════════════════════
 function renderPending(){
-  const pending=coaches.filter(c=>c.status==='pending'&&!c.is_demo);
-  if(!pending.length) return '<div class="empty"><h3>No pending applications</h3><p>New coach signups will appear here for your review.</p></div>';
+  const pending=coaches.filter(c=>c.status==='pending'&&c.profile_submitted&&!c.is_demo);
+  if(!pending.length) return '<div class="empty"><h3>No pending applications</h3><p>New coach signups will appear here after they submit their profile for review.</p></div>';
 
   return `<div class="table-wrap"><table>
     <thead><tr><th>Coach</th><th>Location</th><th>Rate</th><th>PGA</th><th>Applied</th><th>Actions</th></tr></thead>
