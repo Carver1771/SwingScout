@@ -587,7 +587,8 @@ function gF(){
 }
 
 // MAP
-const map=L.map('map',{zoomControl:false}).setView([32.82,-96.83],11);
+const texasBounds=L.latLngBounds([25.8,-106.6],[36.5,-93.5]);
+const map=L.map('map',{zoomControl:false,minZoom:8,maxBounds:texasBounds,maxBoundsViscosity:1.0}).setView([32.82,-96.83],11);
 L.control.zoom({position:'topleft'}).addTo(map);
 L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{attribution:'',maxZoom:19}).addTo(map);
 map.whenReady(()=>{setTimeout(()=>{const ml=document.getElementById('map-loading');if(ml)ml.classList.add('loaded')},800)});
@@ -663,7 +664,7 @@ function showProfile(id){
   const schedDays=i.sched?DAYS.filter(d=>i.sched[d]&&i.sched[d].length).map(d=>`<div style="flex:1;min-width:65px;text-align:center;padding:8px 4px;border-radius:8px;background:var(--surface);border:1px solid var(--border-light)"><div style="font-size:10px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px">${d}</div><div style="font-size:11px;color:var(--brand);font-weight:600;margin-top:3px">${i.sched[d].length} slots</div><div style="font-size:10px;color:var(--text-muted);margin-top:1px">${i.sched[d][0]}</div></div>`).join(''):'';
   const revs=i.rtexts||[];
   const reviewsHTML=revs.length?`<div class="st" style="margin-top:18px">Student Reviews <span style="font-weight:400;color:var(--text-muted)">(${revs.length})</span></div>${revs.map(r=>`<div class="rev-card"><div class="rev-stars">${'★'.repeat(r.r)}${'☆'.repeat(5-r.r)}</div><div class="rev-text">${r.t}</div><div class="rev-author">— ${r.n}</div></div>`).join('')}`:'';
-  mr.innerHTML=`<div class="mo" onclick="cM()"><div class="md" onclick="event.stopPropagation()"><div class="ph"><button class="cb" onclick="cM()">✕</button><img src="${i.photo}"><div class="nm">${i.name}</div><div class="lc">${pSvg} ${loc.name}, ${loc.city}</div><div class="rt"><span class="stars">${rs(i.rating)}</span><span class="n">${i.rating}</span><span class="rv">(${i.revs} reviews)</span></div><div class="pr">$${i.price}<span>/hr</span></div></div><div class="pb"><div class="badges">${i.demo?'<span class="demo-tag">Example Profile</span>':''}${i.pga?'<span class="badge badge-pga">PGA Certified</span>':''}<span class="badge badge-exp">${i.yrs}+ YEARS</span><span class="badge badge-lessons">${i.lessons} LESSONS</span></div><div class="st">About</div><div class="ab">${i.full}</div><div class="st" style="margin-top:18px">Specialties</div><div class="specs">${i.specs.map(s=>`<span class="spec">${s}</span>`).join('')}</div>${reviewsHTML}<button class="btn btn-outline" style="width:100%;margin-top:14px;padding:10px" onclick="event.stopPropagation();showReviewForm('${i.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:6px"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>Leave a Review</button>${schedDays?`<div class="st" style="margin-top:18px">Availability</div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">${schedDays}</div>`:''}${i.demo?`<button class="pcta" style="background:var(--gold);color:var(--brand-dark)" onclick="showWaitlist('${i.id}')">Join the Waitlist</button>`:`<button class="pcta" onclick="showBooking('${i.id}')">Book a Lesson with ${i.name.split(' ')[0]}</button>`}</div></div></div>`;
+  mr.innerHTML=`<div class="mo" onclick="cM()"><div class="md" onclick="event.stopPropagation()"><div class="ph"><button class="cb" onclick="cM()">✕</button><img src="${i.photo}"><div class="nm">${i.name}</div><div class="lc">${pSvg} ${loc.name}, ${loc.city}</div><div class="rt"><span class="stars">${rs(i.rating)}</span><span class="n">${i.rating}</span><span class="rv">(${i.revs} reviews)</span></div><div class="pr">$${i.price}<span>/hr</span></div></div><div class="pb"><div class="badges">${i.demo?'<span class="demo-tag">Example Profile</span>':''}${i.pga?'<span class="badge badge-pga">PGA Certified</span>':''}<span class="badge badge-exp">${i.yrs}+ YEARS</span><span class="badge badge-lessons">${i.lessons} LESSONS</span></div><div class="st">About</div><div class="ab">${i.full}</div><div class="st" style="margin-top:18px">Specialties</div><div class="specs">${i.specs.map(s=>`<span class="spec">${s}</span>`).join('')}</div>${reviewsHTML}<button class="btn btn-outline" style="width:100%;margin-top:14px;padding:10px" onclick="event.stopPropagation();showReviewForm('${i.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:6px"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>Leave a Review</button>${schedDays?`<div class="st" style="margin-top:18px">Availability</div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">${schedDays}</div>`:''}${`<button class="pcta" onclick="showBooking('${i.id}')">Book a Lesson with ${i.name.split(' ')[0]}</button>`}</div></div></div>`;
 }
 let bkDay=null,bkSlot=null,bkOpen=false,bkDate=null,bkMonth=null,bkYear=null;
 const DAYS=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
@@ -789,9 +790,7 @@ function renderBooking(i,loc){
 // ══════════════════════════════════════
 // FORMSPREE INTEGRATION
 // ══════════════════════════════════════
-const FS_BOOKING='https://formspree.io/f/mzdybeje';
-const FS_COACH='https://formspree.io/f/xeevqapg';
-const FS_WAITLIST='https://formspree.io/f/xgoreapz';
+const FS_CONTACT='https://formspree.io/f/mzdybeje';
 async function sendForm(url,data){
   try{
     const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(data)});
@@ -810,188 +809,16 @@ function subBook(id){
   document.querySelector('.sbtn').textContent='Sending...';
   document.querySelector('.sbtn').disabled=true;
 
-  sendForm(FS_BOOKING,{_type:'Booking Request',student_name:bn,student_email:be,student_phone:bp,skill_level:bsk,instructor:i.name,location:loc.name,date:fullDate,time:bkSlot,price:'$'+i.price+'/hr'}).then(ok=>{
-    if(ok){
-      // Also save to Supabase
-      const dbDate=bkDate.getFullYear()+'-'+String(bkDate.getMonth()+1).padStart(2,'0')+'-'+String(bkDate.getDate()).padStart(2,'0');
-      sb.from('bookings').insert({coach_id:id,student_name:bn,student_email:be,student_phone:bp,skill_level:bsk,booking_date:dbDate,booking_time:bkSlot,location_id:i.lid,price:i.price}).then(({error})=>{
-        if(error)console.error('Booking save error:',error);
-      });
-      // Send booking emails
-      fetch('/api/send-email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'booking',data:{studentName:bn,studentEmail:be,studentPhone:bp,skillLevel:bsk,coachName:i.name,coachEmail:i.email,location:loc.name,date:fullDate,time:bkSlot,price:'$'+i.price+'/hr'}})}).catch(e=>console.error('Email error:',e));
-      mr.innerHTML=`<div class="mo" onclick="cM()"><div class="md" onclick="event.stopPropagation()"><div class="bh"><div><div class="bt">Request Sent!</div></div><button class="cb" style="position:static" onclick="cM()">✕</button></div><div class="suc"><div class="suc-ic"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div><h3>You're all set!</h3><p>Lesson requested with ${i.name} on <strong>${fullDate} at ${bkSlot}</strong> at ${loc.name}.</p><p style="font-size:13px;color:var(--text-secondary);margin-top:12px">We'll connect you with ${i.name.split(' ')[0]} shortly. Check your email for confirmation.</p><button class="dbtn" onclick="cM()">Done</button></div></div></div>`;
-    } else {
-      alert('Something went wrong. Please try again.');
-    }
+  // Save to Supabase
+  const dbDate=bkDate.getFullYear()+'-'+String(bkDate.getMonth()+1).padStart(2,'0')+'-'+String(bkDate.getDate()).padStart(2,'0');
+  sb.from('bookings').insert({coach_id:id,student_name:bn,student_email:be,student_phone:bp,skill_level:bsk,booking_date:dbDate,booking_time:bkSlot,location_id:i.lid,price:i.price}).then(({error})=>{
+    if(error){console.error('Booking save error:',error);alert('Something went wrong. Please try again.');return}
+    // Send booking emails via Resend
+    fetch('/api/send-email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'booking',data:{studentName:bn,studentEmail:be,studentPhone:bp,skillLevel:bsk,coachName:i.name,coachEmail:i.email,location:loc.name,date:fullDate,time:bkSlot,price:'$'+i.price+'/hr'}})}).catch(e=>console.error('Email error:',e));
+    mr.innerHTML=`<div class="mo" onclick="cM()"><div class="md" onclick="event.stopPropagation()"><div class="bh"><div><div class="bt">Request Sent!</div></div><button class="cb" style="position:static" onclick="cM()">✕</button></div><div class="suc"><div class="suc-ic"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div><h3>You're all set!</h3><p>Lesson requested with ${i.name} on <strong>${fullDate} at ${bkSlot}</strong> at ${loc.name}.</p><p style="font-size:13px;color:var(--text-secondary);margin-top:12px">We'll connect you with ${i.name.split(' ')[0]} shortly. Check your email for confirmation.</p><button class="dbtn" onclick="cM()">Done</button></div></div></div>`;
   });
 }
 
-// ══════════════════════════════════════
-// COACH PROFILE BUILDER
-// ══════════════════════════════════════
-let cpStep=1;
-let cp={firstName:'',lastName:'',email:'',phone:'',instagram:'',photoPreview:'',pga:false,yrs:'',shortBio:'',fullBio:'',specs:[],locId:'',otherLocName:'',otherLocAddress:'',price:'',avail:'',sched:{}};
-const allSpecs=["Short Game","Swing Mechanics","Putting","Driving","Course Strategy","Mental Game","Beginners","Junior Golf","Women's Golf","Group Lessons","Video Analysis","TrackMan","Golf Fitness","Competition Prep","Slice Fixing","Corporate Events"];
-const TIMES=["6:00 AM","7:00 AM","8:00 AM","9:00 AM","10:00 AM","11:00 AM","12:00 PM","1:00 PM","2:00 PM","3:00 PM","4:00 PM","5:00 PM","6:00 PM","7:00 PM"];
-
-let cpbOpen=false;
-
-function showCoachSignup(){cpStep=0;cpbOpen=false;cp={firstName:'',lastName:'',email:'',phone:'',instagram:'',photoPreview:'',pga:false,yrs:'',shortBio:'',fullBio:'',specs:[],locId:'',otherLocName:'',otherLocAddress:'',price:'',avail:'',sched:{}};renderCPB()}
-
-function renderCPB(){
-  lS();
-
-  // Step 0: Landing page
-  if(cpStep===0){
-    mr.innerHTML=`<div class="mo" onclick="cM()"><div class="md cpb-modal" onclick="event.stopPropagation()">
-      <div class="cl-hero">
-        <button class="cb" onclick="cM()">✕</button>
-        <h2>Grow your coaching business with <span>Swingable Golf</span></h2>
-        <p>Join the DFW golf coaching marketplace and connect with students actively looking for lessons.</p>
-        <div class="cl-stats">
-          <div class="cl-stat"><div class="n">${locations.length}+</div><div class="l">Venues</div></div>
-          <div class="cl-stat"><div class="n">500+</div><div class="l">Monthly Visitors</div></div>
-          <div class="cl-stat"><div class="n">DFW</div><div class="l">Focused</div></div>
-        </div>
-      </div>
-      <div class="cl-benefits">
-        <div class="cl-benefit"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg><div><div class="cl-bt">Students come to you</div><div class="cl-bd">Stop chasing leads. Students search by location and specialty, then request lessons directly.</div></div></div>
-        <div class="cl-benefit"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg><div><div class="cl-bt">You control everything</div><div class="cl-bd">Set your own rates, choose your schedule, and teach at your preferred location.</div></div></div>
-        <div class="cl-benefit"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg><div><div class="cl-bt">Build your reputation</div><div class="cl-bd">Collect reviews, showcase your credentials, and stand out with a professional profile.</div></div></div>
-      </div>
-      <div class="cl-quote">"I picked up 4 new students in my first month on Swingable Golf. The booking requests just started coming in — I didn't have to do anything except show up and teach."<div class="cl-qa">— Marcus R., Stevens Park Golf Course</div></div>
-      <div class="cl-cta"><button class="cl-cta-btn" onclick="cpStep=1;renderCPB()">Build Your Profile</button><div class="cl-cta-sub">Takes under 3 minutes · No commitment required</div></div>
-    </div></div>`;
-    return;
-  }
-
-  const dots=[1,2,3,4].map(s=>`<div class="cpb-step ${s<cpStep?'done':''} ${s===cpStep?'active':''}"></div>`).join('');
-  let body='';
-
-  if(cpStep===1){
-    body=`<div class="cpb-step-title">Personal Information</div>
-    <div class="cpb-step-desc">This is how students will find and recognize you.</div>
-    <div class="photo-drop" onclick="document.getElementById('cp-photo').click()">
-      <div class="photo-circle">${cp.photoPreview?`<img src="${cp.photoPreview}">`:'<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'}</div>
-      <div class="photo-drop-text">${cp.photoPreview?'Change photo':'Upload a profile photo'}<span>JPG or PNG recommended. This builds trust with students.</span></div>
-      <input type="file" id="cp-photo" accept="image/*" style="display:none" onchange="cpPhoto(event)">
-    </div>
-    <div class="field-row"><div class="fl"><label>First Name</label><input value="${cp.firstName}" placeholder="Marcus" oninput="cp.firstName=this.value"></div>
-    <div class="fl"><label>Last Name</label><input value="${cp.lastName}" placeholder="Reid" oninput="cp.lastName=this.value"></div></div>
-    <div class="fl"><label>Email</label><input type="email" value="${cp.email}" placeholder="your email address" oninput="cp.email=this.value"></div>
-    <div class="fl"><label>Phone</label><input type="tel" value="${cp.phone}" placeholder="(214) 555-0123" oninput="cp.phone=this.value"></div>
-    <div class="fl"><label>Instagram <span style="font-weight:400;color:var(--text-muted)">(optional — helps students find you)</span></label><input value="${cp.instagram}" placeholder="@yourhandle" oninput="cp.instagram=this.value"></div>`;
-  }
-  else if(cpStep===2){
-    body=`<div class="cpb-step-title">Experience & Credentials</div>
-    <div class="cpb-step-desc">Help students understand what makes you qualified.</div>
-    <div class="field-row"><div class="fl"><label>Years of Experience</label><select onchange="cp.yrs=this.value"><option value="" ${!cp.yrs?'selected':''} disabled>Select</option><option ${cp.yrs==='1-3'?'selected':''}>1-3</option><option ${cp.yrs==='4-7'?'selected':''}>4-7</option><option ${cp.yrs==='8-12'?'selected':''}>8-12</option><option ${cp.yrs==='13+'?'selected':''}>13+</option></select></div>
-    <div class="fl"><label>PGA Certified?</label><select onchange="cp.pga=this.value==='yes'"><option value="no" ${!cp.pga?'selected':''}>No</option><option value="yes" ${cp.pga?'selected':''}>Yes</option></select></div></div>
-    <div class="fl"><label>Short Bio <span style="font-weight:400;color:var(--text-muted)">(appears on your card)</span></label><input value="${cp.shortBio}" placeholder="e.g. Specializes in short game mastery and course management." oninput="cp.shortBio=this.value;document.getElementById('sc-count').textContent=this.value.length+'/120'" maxlength="120"><div class="char-count" id="sc-count">${cp.shortBio.length}/120</div></div>
-    <div class="fl"><label>Full Bio <span style="font-weight:400;color:var(--text-muted)">(your profile page — be detailed)</span></label><textarea placeholder="Tell students about your teaching philosophy, playing background, coaching achievements, and what makes your lessons different..." oninput="cp.fullBio=this.value" rows="5">${cp.fullBio}</textarea></div>
-    <label style="display:block;font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:8px">Specialties <span style="font-weight:400;color:var(--text-muted)">(pick up to 5)</span></label>
-    <div class="spec-grid">${allSpecs.map(s=>{const on=cp.specs.includes(s);return`<div class="spec-pill ${on?'on':''}" onclick="togSpec('${s}')"><span class="sp-ck">${on?ckSvg:''}</span>${s}</div>`}).join('')}</div>`;
-  }
-  else if(cpStep===3){
-    // Build availability grid
-    let gridHTML=`<div class="avail-grid"><div class="ag-corner"></div>${DAYS.map(d=>`<div class="ag-header">${d}</div>`).join('')}`;
-    TIMES.forEach(t=>{
-      gridHTML+=`<div class="ag-time">${t}</div>`;
-      DAYS.forEach(d=>{
-        const on=cp.sched[d]&&cp.sched[d].includes(t);
-        gridHTML+=`<div class="ag-cell ${on?'on':''}" onclick="togAvail('${d}','${t}')"></div>`;
-      });
-    });
-    gridHTML+=`</div>`;
-    const totalSlots=Object.values(cp.sched).reduce((a,b)=>a+b.length,0);
-
-    body=`<div class="cpb-step-title">Teaching Details & Availability</div>
-    <div class="cpb-step-desc">Where you teach, your rate, and when students can book you.</div>
-    <div class="fl"><label>Primary Teaching Location</label><select onchange="cp.locId=this.value;renderCPB()"><option value="" ${!cp.locId?'selected':''} disabled>Select a venue</option>${locations.map(l=>`<option value="${l.id}" ${cp.locId===l.id?'selected':''}>${l.name} — ${l.city}</option>`).join('')}<option value="other" ${cp.locId==='other'?'selected':''}>Other — My facility isn't listed</option></select></div>
-    ${cp.locId==='other'?`<div class="fl"><label>Facility Name</label><input value="${cp.otherLocName}" placeholder="e.g. Brookhaven Country Club" oninput="cp.otherLocName=this.value"></div>
-    <div class="fl"><label>Facility Address</label><input value="${cp.otherLocAddress}" placeholder="e.g. 3333 Golfing Green Dr, Dallas, TX 75234" oninput="cp.otherLocAddress=this.value"></div>`:''}
-    <div class="field-row"><div class="fl"><label>Hourly Rate ($)</label><input type="number" min="25" max="500" value="${cp.price}" placeholder="120" oninput="cp.price=this.value"></div>
-    <div class="fl"><label>Lesson Duration</label><select><option>60 minutes</option><option>90 minutes</option><option>45 minutes</option></select></div></div>
-    <div class="sched-wrap">
-      <div class="sched-label">Weekly Availability <span style="font-weight:400;color:var(--text-muted)">(${totalSlots} slot${totalSlots!==1?'s':''} selected)</span></div>
-      <div class="sched-sublabel">Click cells to toggle your available hours. Students will book from these slots.</div>
-      ${gridHTML}
-    </div>`;
-  }
-  else if(cpStep===4){
-    const loc=locations.find(l=>l.id===cp.locId);
-    body=`<div class="cpb-step-title">Preview Your Profile</div>
-    <div class="cpb-step-desc">This is how students will see you on Swingable Golf.</div>
-    <div class="preview-card"><div class="card-inner">
-      <div class="photo-circle" style="width:54px;height:54px;border:2px solid var(--border-light)">${cp.photoPreview?`<img src="${cp.photoPreview}">`:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'}</div>
-      <div class="card-info"><div class="card-top"><div class="card-name">${cp.firstName} ${cp.lastName}</div><div class="card-price">$${cp.price||'—'}<span>/hr</span></div></div>
-      <div class="card-meta"><span class="card-location">${pSvg} ${loc?loc.name:(cp.locId==='other'?cp.otherLocName:'—')}</span></div>
-      <div class="badges">${cp.pga?'<span class="badge badge-pga">PGA Certified</span>':''}<span class="badge badge-exp">${cp.yrs||'—'} YRS</span></div>
-      <div class="card-bio">${cp.shortBio||'No short bio yet'}</div></div>
-    </div></div>
-    <div class="review-grid">
-      <div class="review-item"><div class="rl">Email</div><div class="rv">${cp.email||'—'}</div></div>
-      <div class="review-item"><div class="rl">Phone</div><div class="rv">${cp.phone||'—'}</div></div>
-      <div class="review-item"><div class="rl">Instagram</div><div class="rv">${cp.instagram||'—'}</div></div>
-      ${cp.locId==='other'?`<div class="review-item"><div class="rl">Facility</div><div class="rv">${cp.otherLocName}</div></div>
-      <div class="review-item"><div class="rl">Address</div><div class="rv">${cp.otherLocAddress}</div></div>`:''}<div class="review-item"><div class="rl">Availability</div><div class="rv">${Object.entries(cp.sched).filter(([,s])=>s.length).map(([d,s])=>d+' ('+s.length+')').join(', ')||'Not set'}</div></div>
-      <div class="review-item"><div class="rl">Specialties</div><div class="rv">${cp.specs.length?cp.specs.join(', '):'—'}</div></div>
-    </div>
-    ${cp.fullBio?`<div style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:4px">FULL BIO</div><div style="font-size:13px;color:var(--text-secondary);line-height:1.6;background:var(--surface);padding:12px;border-radius:8px;margin-bottom:8px">${cp.fullBio}</div>`:''}
-    <p style="font-size:12px;color:var(--text-muted);line-height:1.5;margin-top:12px">By submitting, you agree to be contacted by Swingable Golf about your application. We'll review your profile and get back to you within 48 hours.</p>`;
-  }
-
-  const animCls=cpbOpen?' no-anim':'';
-  cpbOpen=true;
-
-  mr.innerHTML=`<div class="mo${animCls}" onclick="cM()"><div class="md cpb-modal" onclick="event.stopPropagation()">
-    <div class="cpb-header"><button class="cb" onclick="cM()">✕</button>
-      <h2>${cpStep===4?'Review & Submit':'Build Your Coach Profile'}</h2>
-      <p>Step ${cpStep} of 4${cpStep===4?' — make sure everything looks right':''}</p>
-      <div class="cpb-steps">${dots}</div>
-    </div>
-    <div class="cpb-body">${body}</div>
-    <div class="cpb-footer">
-      ${cpStep>1?'<button class="cpb-back" onclick="cpStep--;renderCPB()">Back</button>':'<div></div>'}
-      ${cpStep<4?'<button class="cpb-next" onclick="cpNext()">Continue</button>':'<button class="cpb-next" onclick="cpSubmit()" style="background:var(--gold);color:var(--brand-dark)">Submit Application</button>'}
-    </div>
-  </div></div>`;
-}
-
-function cpPhoto(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{cp.photoPreview=ev.target.result;renderCPB()};r.readAsDataURL(f)}
-function togSpec(s){const i=cp.specs.indexOf(s);if(i>-1)cp.specs.splice(i,1);else if(cp.specs.length<5)cp.specs.push(s);const sc=document.querySelector('.md');const st=sc?sc.scrollTop:0;renderCPB();const sc2=document.querySelector('.md');if(sc2)sc2.scrollTop=st}
-function togAvail(day,time){if(!cp.sched[day])cp.sched[day]=[];const i=cp.sched[day].indexOf(time);if(i>-1)cp.sched[day].splice(i,1);else cp.sched[day].push(time);cp.sched[day].sort((a,b)=>TIMES.indexOf(a)-TIMES.indexOf(b));const sc=document.querySelector('.md');const st=sc?sc.scrollTop:0;renderCPB();const sc2=document.querySelector('.md');if(sc2)sc2.scrollTop=st}
-
-function cpNext(){
-  if(cpStep===1){if(!cp.firstName.trim()||!cp.lastName.trim()||!cp.email.trim()||!cp.phone.trim()){alert('Please fill in all fields.');return}}
-  else if(cpStep===2){if(!cp.yrs||!cp.shortBio.trim()||!cp.fullBio.trim()){alert('Please fill in experience, short bio, and full bio.');return}}
-  else if(cpStep===3){if(!cp.locId||!cp.price){alert('Please select a location and set your rate.');return}if(cp.locId==='other'&&(!cp.otherLocName.trim()||!cp.otherLocAddress.trim())){alert('Please enter your facility name and address.');return}const totalSlots=Object.values(cp.sched).reduce((a,b)=>a+b.length,0);if(totalSlots===0){if(!confirm('You haven\'t set any availability slots. Students won\'t be able to pick a time. Continue anyway?'))return}}
-  cpStep++;renderCPB();
-}
-
-function cpSubmit(){
-  const loc=locations.find(l=>l.id===cp.locId);
-  const locName=cp.locId==='other'?cp.otherLocName:loc?loc.name:'Other';
-  const schedText=Object.entries(cp.sched).filter(([,s])=>s.length).map(([d,s])=>d+': '+s.join(', ')).join(' | ')||'Not set';
-  const formData={_type:'Coach Application',name:cp.firstName+' '+cp.lastName,email:cp.email,phone:cp.phone,instagram:cp.instagram||'N/A',pga_certified:cp.pga?'Yes':'No',experience:cp.yrs+' years',location:locName,rate:'$'+cp.price+'/hr',specialties:cp.specs.join(', '),availability:schedText,short_bio:cp.shortBio,full_bio:cp.fullBio};
-  if(cp.locId==='other'){formData.custom_facility_name=cp.otherLocName;formData.custom_facility_address=cp.otherLocAddress}
-
-  sendForm(FS_COACH,formData).then(ok=>{
-    if(ok){
-      mr.innerHTML=`<div class="mo" onclick="cM()"><div class="md cpb-modal" onclick="event.stopPropagation()">
-        <div class="bh"><div><div class="bt">Application Submitted!</div></div><button class="cb" style="position:static" onclick="cM()">✕</button></div>
-        <div class="suc">
-          <div class="suc-ic"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>
-          <h3>Welcome, ${cp.firstName}!</h3>
-          <p>Your application has been submitted. Our team will review your profile and get back to you within 48 hours.</p>
-          <button class="dbtn" onclick="cM()" style="margin-top:20px">Done</button>
-        </div>
-      </div></div>`;
-    } else {
-      alert('Something went wrong submitting your application. Please try again.');
-    }
-  });
-}
 
 // ══════════════════════════════════════
 // ABOUT / PRIVACY / TERMS
@@ -1087,7 +914,7 @@ function submitContact(){
   document.querySelector('.sbtn').textContent='Sending...';
   document.querySelector('.sbtn').disabled=true;
 
-  sendForm(FS_BOOKING,{_type:'Contact Message',name,email,subject:subj,message:msg}).then(ok=>{
+  sendForm(FS_CONTACT,{_type:'Contact Message',name,email,subject:subj,message:msg}).then(ok=>{
     if(ok){
       mr.innerHTML=`<div class="mo" onclick="cM()"><div class="md" style="max-width:460px" onclick="event.stopPropagation()"><div class="bh"><div><div class="bt">Message Sent!</div></div><button class="cb" style="position:static" onclick="cM()">✕</button></div><div class="suc"><div class="suc-ic"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div><h3>Thanks, ${name}!</h3><p>We've received your message and will get back to you within 24 hours.</p><button class="dbtn" onclick="cM()" style="margin-top:16px">Done</button></div></div></div>`;
     } else {
@@ -1099,39 +926,6 @@ function submitContact(){
 // ══════════════════════════════════════
 // WAITLIST
 // ══════════════════════════════════════
-function showWaitlist(id){
-  const i=instructors.find(x=>x.id===id);const loc=gL(i.lid);lS();
-  mr.innerHTML=`<div class="mo" onclick="cM()"><div class="md" style="max-width:460px" onclick="event.stopPropagation()">
-    <div class="bh"><div><div class="bt">Join the Waitlist</div><div class="bs">Be first to book when ${i.name.split(' ')[0]} goes live</div></div><button class="cb" style="position:static" onclick="cM()">✕</button></div>
-    <div class="bf">
-      <div class="iprev"><img src="${i.photo}"><div><div class="nm">${i.name}</div><div class="dt">${loc.name} · $${i.price}/hr</div></div></div>
-      <p class="waitlist-note">This is a featured coach profile. We're currently onboarding instructors in DFW. Leave your email and we'll notify you as soon as lessons are available to book.</p>
-      <div class="fl"><label>Your Name</label><input id="wl-name" placeholder="John Smith"></div>
-      <div class="fl"><label>Email</label><input id="wl-email" type="email" placeholder="your email address"></div>
-      <div class="fl"><label>What are you looking for?</label><select id="wl-level"><option>Beginner lessons</option><option>Intermediate improvement</option><option>Advanced coaching</option><option>Junior/youth lessons</option><option>Group lessons</option><option>Just exploring</option></select></div>
-      <button class="sbtn" onclick="submitWaitlist('${i.id}')">Notify Me</button>
-    </div>
-  </div></div>`;
-}
-
-function submitWaitlist(id){
-  const i=instructors.find(x=>x.id===id);
-  const name=document.getElementById('wl-name').value.trim();
-  const email=document.getElementById('wl-email').value.trim();
-  const level=document.getElementById('wl-level').value;
-  if(!name||!email){alert('Please enter your name and email.');return}
-
-  document.querySelector('.sbtn').textContent='Sending...';
-  document.querySelector('.sbtn').disabled=true;
-
-  sendForm(FS_WAITLIST,{_type:'Waitlist Signup',name,email,looking_for:level,interested_in:i.name,location:gL(i.lid).name}).then(ok=>{
-    if(ok){
-      mr.innerHTML=`<div class="mo" onclick="cM()"><div class="md" style="max-width:460px" onclick="event.stopPropagation()"><div class="bh"><div><div class="bt">You're on the list!</div></div><button class="cb" style="position:static" onclick="cM()">✕</button></div><div class="suc"><div class="suc-ic"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div><h3>Thanks, ${name}!</h3><p>We'll email you at <strong>${email}</strong> as soon as coaches are available to book in your area.</p><button class="dbtn" onclick="cM()" style="margin-top:16px">Done</button></div></div></div>`;
-    } else {
-      alert('Something went wrong. Please try again.');
-    }
-  });
-}
 
 // ══════════════════════════════════════
 // REVIEW SYSTEM
