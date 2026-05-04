@@ -50,6 +50,14 @@ export default async function handler(req, res) {
           subject: `${data.coachName} confirmed your lesson — payment processed`,
           html: bookingConfirmedEmail(data),
         });
+        // Also notify the coach
+        if (data.coachEmail) {
+          emails.push({
+            to: data.coachEmail,
+            subject: `Lesson confirmed with ${data.studentName}`,
+            html: bookingConfirmedCoachEmail(data),
+          });
+        }
         break;
       }
 
@@ -60,6 +68,14 @@ export default async function handler(req, res) {
           subject: 'Your lesson request was not accepted',
           html: bookingDeclinedEmail(data),
         });
+        // Also notify the coach
+        if (data.coachEmail) {
+          emails.push({
+            to: data.coachEmail,
+            subject: `You declined ${data.studentName}'s request`,
+            html: bookingDeclinedCoachEmail(data),
+          });
+        }
         break;
       }
 
@@ -214,6 +230,35 @@ function bookingDeclinedEmail(d) {
     <p>Unfortunately, ${d.coachName} wasn't able to accept your request for ${d.date} at ${d.time}.</p>
     <p><strong>Good news:</strong> your card was only authorized, not charged. You'll see the hold drop off within 5-7 business days.</p>
     <a href="https://swingablegolf.com" style="${buttonStyle}">Find another coach</a>
+    <p style="color:#9e9e9e;font-size:12px;margin-top:32px">Swingable Golf</p>
+  </div>`;
+}
+
+function bookingConfirmedCoachEmail(d) {
+  return `<div style="${baseStyle}">
+    <h2 style="color:#14442b">Lesson Confirmed</h2>
+    <p>Hi ${d.coachName.split(' ')[0]},</p>
+    <p>You confirmed the lesson with <strong>${d.studentName}</strong>. They've been notified and their card has been charged.</p>
+    <p style="background:#e8f5ec;padding:16px;border-radius:8px">
+      <strong>Student:</strong> ${d.studentName}<br>
+      <strong>Date:</strong> ${d.date}<br>
+      <strong>Time:</strong> ${d.time}<br>
+      <strong>Location:</strong> ${d.location}
+    </p>
+    <p>Payouts to your bank account typically arrive within 2 business days after the lesson date.</p>
+    <p>Reach out to your student to coordinate any logistics — they have your contact info as well.</p>
+    <a href="https://swingablegolf.com/coach.html" style="${buttonStyle}">View in dashboard</a>
+    <p style="color:#9e9e9e;font-size:12px;margin-top:32px">Swingable Golf</p>
+  </div>`;
+}
+
+function bookingDeclinedCoachEmail(d) {
+  return `<div style="${baseStyle}">
+    <h2 style="color:#14442b">Booking Declined</h2>
+    <p>Hi ${d.coachName.split(' ')[0]},</p>
+    <p>You declined the lesson request from <strong>${d.studentName}</strong> for ${d.date} at ${d.time}.</p>
+    <p>Their card authorization has been released — no charge was made. They've been notified.</p>
+    <a href="https://swingablegolf.com/coach.html" style="${buttonStyle}">Back to dashboard</a>
     <p style="color:#9e9e9e;font-size:12px;margin-top:32px">Swingable Golf</p>
   </div>`;
 }
