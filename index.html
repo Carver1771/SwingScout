@@ -666,7 +666,8 @@ function showProfile(id){
   const schedDays=i.sched?DAYS.filter(d=>i.sched[d]&&i.sched[d].length).map(d=>`<div style="flex:1;min-width:65px;text-align:center;padding:8px 4px;border-radius:8px;background:var(--surface);border:1px solid var(--border-light)"><div style="font-size:10px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px">${d}</div><div style="font-size:11px;color:var(--brand);font-weight:600;margin-top:3px">${i.sched[d].length} slots</div><div style="font-size:10px;color:var(--text-muted);margin-top:1px">${i.sched[d][0]}</div></div>`).join(''):'';
   const revs=i.rtexts||[];
   const reviewsHTML=revs.length?`<div class="st" style="margin-top:18px">Student Reviews <span style="font-weight:400;color:var(--text-muted)">(${revs.length})</span></div>${revs.map(r=>`<div class="rev-card"><div class="rev-stars">${'★'.repeat(r.r)}${'☆'.repeat(5-r.r)}</div><div class="rev-text">${r.t}</div><div class="rev-author">— ${r.n}</div></div>`).join('')}`:'';
-  mr.innerHTML=`<div class="mo" onclick="cM()"><div class="md" onclick="event.stopPropagation()"><div class="ph"><button class="cb" onclick="cM()">✕</button><img src="${i.photo}"><div class="nm">${i.name}</div><div class="lc">${pSvg} ${loc.name}, ${loc.city}</div><div class="rt"><span class="stars">${rs(i.rating)}</span><span class="n">${i.rating}</span><span class="rv">(${i.revs} reviews)</span></div><div class="pr">$${i.price}<span>/hr</span></div></div><div class="pb"><div class="badges">${i.demo?'<span class="demo-tag">Example Profile</span>':''}${i.pga?'<span class="badge badge-pga">PGA Certified</span>':''}<span class="badge badge-exp">${i.yrs}+ YEARS</span><span class="badge badge-lessons">${i.lessons} LESSONS</span></div><div class="st">About</div><div class="ab">${i.full}</div><div class="st" style="margin-top:18px">Specialties</div><div class="specs">${i.specs.map(s=>`<span class="spec">${s}</span>`).join('')}</div>${reviewsHTML}<button class="btn btn-outline" style="width:100%;margin-top:14px;padding:10px" onclick="event.stopPropagation();showReviewForm('${i.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:6px"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>Leave a Review</button>${schedDays?`<div class="st" style="margin-top:18px">Availability</div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">${schedDays}</div>`:''}${`<button class="pcta" onclick="showBooking('${i.id}')">Book a Lesson with ${i.name.split(' ')[0]}</button>`}</div></div></div>`;
+  const bookBtnHTML=i.stripeReady?`<button class="pcta" onclick="showBooking('${i.id}')">Book a Lesson with ${i.name.split(' ')[0]}</button>`:`<div style="margin-top:24px;padding:14px;background:var(--surface);border:1px solid var(--border-light);border-radius:10px;text-align:center;font-size:13px;color:var(--text-muted)">${i.name.split(' ')[0]} hasn't set up payments yet.<br><span style="font-size:12px">Check back soon — or <a onclick="showContact()" style="color:var(--brand);cursor:pointer;font-weight:600">let us know</a> you're interested.</span></div>`;
+  mr.innerHTML=`<div class="mo" onclick="cM()"><div class="md" onclick="event.stopPropagation()"><div class="ph"><button class="cb" onclick="cM()">✕</button><img src="${i.photo}"><div class="nm">${i.name}</div><div class="lc">${pSvg} ${loc.name}, ${loc.city}</div><div class="rt"><span class="stars">${rs(i.rating)}</span><span class="n">${i.rating}</span><span class="rv">(${i.revs} reviews)</span></div><div class="pr">$${i.price}<span>/hr</span></div></div><div class="pb"><div class="badges">${i.demo?'<span class="demo-tag">Example Profile</span>':''}${i.pga?'<span class="badge badge-pga">PGA Certified</span>':''}<span class="badge badge-exp">${i.yrs}+ YEARS</span><span class="badge badge-lessons">${i.lessons} LESSONS</span></div><div class="st">About</div><div class="ab">${i.full}</div><div class="st" style="margin-top:18px">Specialties</div><div class="specs">${i.specs.map(s=>`<span class="spec">${s}</span>`).join('')}</div>${reviewsHTML}<button class="btn btn-outline" style="width:100%;margin-top:14px;padding:10px" onclick="event.stopPropagation();showReviewForm('${i.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:6px"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>Leave a Review</button>${schedDays?`<div class="st" style="margin-top:18px">Availability</div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">${schedDays}</div>`:''}${bookBtnHTML}</div></div></div>`;
 }
 let bkDay=null,bkSlot=null,bkOpen=false,bkDate=null,bkMonth=null,bkYear=null;
 const DAYS=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
@@ -764,7 +765,14 @@ function renderBooking(i,loc){
 
   const bkAnim=bkOpen?' no-anim':'';
   bkOpen=true;
-  const confirmTxt=bkDate&&bkSlot?'Confirm '+MNAMES[bkDate.getMonth()]+' '+bkDate.getDate()+' at '+bkSlot:'Select a date and time to continue';
+  const serviceFee=i.price*0.08;
+  const totalPrice=i.price+serviceFee;
+  const priceBreakdownHTML=`<div style="background:var(--surface);border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:13px">
+    <div style="display:flex;justify-content:space-between;padding:3px 0;color:var(--text-secondary)"><span>Lesson with ${i.name.split(' ')[0]}</span><span>$${i.price.toFixed(2)}</span></div>
+    <div style="display:flex;justify-content:space-between;padding:3px 0;color:var(--text-secondary)"><span>Service fee (8%)</span><span>$${serviceFee.toFixed(2)}</span></div>
+    <div style="display:flex;justify-content:space-between;padding:6px 0 0;margin-top:6px;border-top:1px solid var(--border);font-weight:700;color:var(--text)"><span>Total</span><span>$${totalPrice.toFixed(2)}</span></div>
+  </div>`;
+  const confirmTxt=bkDate&&bkSlot?'Continue to Payment ($'+totalPrice.toFixed(2)+')':'Select a date and time to continue';
 
   mr.innerHTML=`<div class="mo${bkAnim}" onclick="cM()"><div class="md" onclick="event.stopPropagation()">
     <div class="bh"><div><div class="bt">Book a Lesson</div><div class="bs">with ${i.name} at ${loc.name}</div></div><button class="cb" style="position:static" onclick="cM()">✕</button></div>
@@ -782,6 +790,8 @@ function renderBooking(i,loc){
       <div class="fl"><label>Email</label><input id="be" type="email" placeholder="your email address"></div>
       <div class="fl"><label>Phone</label><input id="bp" type="tel" placeholder="(214) 555-0123"></div>
       <div class="fl"><label>Skill Level</label><select id="bsk"><option>Beginner</option><option>Intermediate</option><option>Advanced</option></select></div>
+      ${priceBreakdownHTML}
+      <div style="text-align:center;font-size:11px;color:var(--text-muted);margin-bottom:10px">🔒 Secure payment via Stripe · You won't be charged until ${i.name.split(' ')[0]} confirms</div>
       <button class="sbtn" onclick="subBook('${i.id}')" ${!bkSlot?'style="opacity:.5;cursor:not-allowed" disabled':''}>
         ${confirmTxt}
       </button>
@@ -805,19 +815,44 @@ function subBook(id){
   if(!bkDate||!bkSlot){alert('Please select a date and time slot.');return}
   const bn=document.getElementById('bn').value.trim(),be=document.getElementById('be').value.trim(),bp=document.getElementById('bp').value.trim(),bsk=document.getElementById('bsk').value;
   if(!bn||!be||!bp){alert('Please fill in your name, email, and phone.');return}
-  const fullDate=MNAMES[bkDate.getMonth()]+' '+bkDate.getDate()+', '+bkDate.getFullYear();
 
   // Show loading state
-  document.querySelector('.sbtn').textContent='Sending...';
-  document.querySelector('.sbtn').disabled=true;
+  const btn=document.querySelector('.sbtn');
+  btn.textContent='Redirecting to secure payment...';
+  btn.disabled=true;
 
-  // Save to Supabase
+  // Format date for DB (YYYY-MM-DD)
   const dbDate=bkDate.getFullYear()+'-'+String(bkDate.getMonth()+1).padStart(2,'0')+'-'+String(bkDate.getDate()).padStart(2,'0');
-  sb.from('bookings').insert({coach_id:id,student_name:bn,student_email:be,student_phone:bp,skill_level:bsk,booking_date:dbDate,booking_time:bkSlot,location_id:i.lid,price:i.price}).then(({error})=>{
-    if(error){console.error('Booking save error:',error);alert('Something went wrong. Please try again.');return}
-    // Send booking emails via Resend
-    fetch('/api/send-email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'booking',data:{studentName:bn,studentEmail:be,studentPhone:bp,skillLevel:bsk,coachName:i.name,coachEmail:i.email,location:loc.name,date:fullDate,time:bkSlot,price:'$'+i.price+'/hr'}})}).catch(e=>console.error('Email error:',e));
-    mr.innerHTML=`<div class="mo" onclick="cM()"><div class="md" onclick="event.stopPropagation()"><div class="bh"><div><div class="bt">Request Sent!</div></div><button class="cb" style="position:static" onclick="cM()">✕</button></div><div class="suc"><div class="suc-ic"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div><h3>You're all set!</h3><p>Lesson requested with ${i.name} on <strong>${fullDate} at ${bkSlot}</strong> at ${loc.name}.</p><p style="font-size:13px;color:var(--text-secondary);margin-top:12px">We'll connect you with ${i.name.split(' ')[0]} shortly. Check your email for confirmation.</p><button class="dbtn" onclick="cM()">Done</button></div></div></div>`;
+
+  // Call create-checkout API to start the Stripe payment flow
+  fetch('/api/create-checkout',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      coachId:id,
+      studentName:bn,
+      studentEmail:be,
+      studentPhone:bp,
+      skillLevel:bsk,
+      bookingDate:dbDate,
+      bookingTime:bkSlot,
+      locationId:i.lid
+    })
+  })
+  .then(r=>r.json())
+  .then(data=>{
+    if(data.url){
+      // Redirect to Stripe Checkout
+      window.location.href=data.url;
+    } else {
+      throw new Error(data.error||'Could not start payment');
+    }
+  })
+  .catch(err=>{
+    console.error('Checkout error:',err);
+    alert(err.message||'Something went wrong. Please try again.');
+    btn.textContent='Continue to Payment';
+    btn.disabled=false;
   });
 }
 
@@ -1043,7 +1078,8 @@ async function loadData(){
         lessons:c.lesson_count||0,
         specs:c.specialties||[],
         rtexts:cRevs.map(r=>({n:r.reviewer_name,t:r.review_text,r:r.rating})),
-        sched:c.schedule||{}
+        sched:c.schedule||{},
+        stripeReady:c.stripe_charges_enabled||false
       };
     });
 
