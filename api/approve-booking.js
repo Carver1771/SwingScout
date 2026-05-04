@@ -129,6 +129,7 @@ export default async function handler(req, res) {
           studentName: booking.student_name,
           studentEmail: booking.student_email,
           coachName: `${booking.coaches.first_name} ${booking.coaches.last_name}`,
+          coachEmail: booking.coaches.email,
           date: dateStr,
           time: booking.booking_time,
           location: booking.locations?.name || 'TBD',
