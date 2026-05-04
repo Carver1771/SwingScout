@@ -78,6 +78,16 @@ const MNAMES = ['January','February','March','April','May','June','July','August
 async function loadBooking() {
   const content = document.getElementById('content');
 
+  // Trigger backend finalization (sends emails, syncs payment status)
+  // Independent of webhook reliability
+  if (bookingId || sessionId) {
+    fetch('/api/finalize-booking', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ bookingId, sessionId })
+    }).catch(err => console.error('Finalize error:', err));
+  }
+
   if (!bookingId) {
     content.innerHTML = `
       <div class="icon-circle">
