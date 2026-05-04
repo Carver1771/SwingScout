@@ -40,9 +40,8 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:#fafaf8;color:#1a1a1a
 .header-inner{display:flex;align-items:center;gap:14px;padding:0 20px;height:56px}
 .logo-group{display:flex;align-items:center;gap:9px;cursor:pointer;flex-shrink:0}
 .logo-icon{width:28px;height:28px;display:flex;align-items:center;justify-content:center}
+.logo-icon-img{height:34px;width:auto;display:block;flex-shrink:0}
 .logo-text{font-family:'Libre Baskerville',Georgia,serif;font-size:19px;font-weight:700;color:#fff;letter-spacing:-.3px}
-.logo-desktop{height:42px;width:auto;display:block}
-.logo-mobile{display:none;height:32px;width:auto}
 .header-divider{width:1px;height:28px;background:rgba(255,255,255,.15);flex-shrink:0}
 .header-search{flex:1;max-width:340px;position:relative}
 .header-search input{width:100%;padding:8px 34px 8px 34px;border-radius:8px;border:1px solid rgba(255,255,255,.15);font-size:13px;font-family:inherit;color:#fff;outline:none;transition:all .15s;background:rgba(255,255,255,.08)}
@@ -74,8 +73,7 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:#fafaf8;color:#1a1a1a
   .nav-links.open{display:flex;position:absolute;top:100%;left:0;right:0;background:var(--brand-dark);flex-direction:column;padding:8px 14px 14px;border-top:1px solid rgba(255,255,255,.1);box-shadow:0 8px 24px rgba(0,0,0,.2);z-index:2000}
   .nav-links.open .nav-link{padding:12px 14px;width:100%;text-align:left;font-size:14px}
   .hamburger{display:flex}
-  .logo-desktop{display:none}
-  .logo-mobile{display:block}
+  .logo-group .logo-text{display:none}
 }
 
 /* ═══ HEADLINE BANNER ═══ */
@@ -446,8 +444,8 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:#fafaf8;color:#1a1a1a
 <body>
 <header class="header"><div class="header-inner">
   <div class="logo-group" onclick="window.scrollTo({top:0,behavior:'smooth'})">
-    <img src="/logo-full.svg" class="logo-desktop" alt="Swingable Golf">
-    <img src="/logo-icon.svg" class="logo-mobile" alt="Swingable Golf">
+    <img src="/logo-icon.svg" class="logo-icon-img" alt="Swingable Golf">
+    <span class="logo-text">Swingable Golf</span>
   </div>
   <div class="header-divider"></div>
   <div class="header-search"><span class="s-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg></span><input type="text" id="search-input" placeholder="Search by name, city, or ZIP code..." oninput="sq=this.value;renderAll()"><button class="s-clear" id="s-clear" onclick="sq='';document.getElementById('search-input').value='';renderAll()" style="display:none">✕</button></div>
