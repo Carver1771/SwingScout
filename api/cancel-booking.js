@@ -167,6 +167,7 @@ function sendDeclineEmail(booking, action) {
         studentName: booking.student_name,
         studentEmail: booking.student_email,
         coachName: `${booking.coaches.first_name} ${booking.coaches.last_name}`,
+        coachEmail: booking.coaches.email,
         date: booking.booking_date,
         time: booking.booking_time,
         amount: booking.amount_paid ? `$${(booking.amount_paid / 100).toFixed(2)}` : null,
