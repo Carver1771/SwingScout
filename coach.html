@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Coach Dashboard — Swingable Golf</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 120'><path d='M50 2C25 2 5 22 5 47c0 33 45 70 45 70s45-37 45-70C95 22 75 2 50 2z' fill='%23c9a84c'/><rect x='42' y='26' width='5' height='42' rx='2' fill='white'/><path d='M47 26l24 11-24 11z' fill='white'/><circle cx='55' cy='76' r='7' fill='white'/></svg>">
+<link rel="icon" type="image/svg+xml" href="/logo-icon.svg">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -22,6 +22,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 /* Header */
 .header{background:var(--brand-dark);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
 .logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:#fff}
+.logo-icon-img{height:34px;width:auto;display:block;flex-shrink:0}
 .logo-text{font-family:'Libre Baskerville',serif;font-size:18px;font-weight:700}
 .header-right{display:flex;align-items:center;gap:16px}
 .header-link{color:rgba(255,255,255,.7);text-decoration:none;font-size:14px;transition:color .2s}
@@ -125,6 +126,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   .dash-header{flex-direction:column;gap:12px;align-items:flex-start}
   .tabs{overflow-x:auto}
   .tab{white-space:nowrap;padding:10px 14px;font-size:13px}
+  .logo .logo-text{display:none}
 }
 </style>
 </head>
@@ -132,7 +134,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
 <div class="header">
   <a href="/" class="logo">
-    <svg width="24" height="30" viewBox="0 0 100 120" fill="none"><path d="M50 2C25 2 5 22 5 47c0 33 45 70 45 70s45-37 45-70C95 22 75 2 50 2z" fill="#c9a84c"/><rect x="42" y="26" width="5" height="42" rx="2" fill="white"/><path d="M47 26l24 11-24 11z" fill="white"/><circle cx="55" cy="76" r="7" fill="white"/></svg>
+    <img src="/logo-icon.svg" class="logo-icon-img" alt="Swingable Golf">
     <span class="logo-text">Swingable Golf</span>
   </a>
   <div class="header-right" id="header-right">
