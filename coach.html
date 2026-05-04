@@ -174,8 +174,10 @@ let editSpecs=[];
 async function init(){
   // Handle Stripe Connect onboarding return
   const urlParams=new URLSearchParams(window.location.search);
-  if(urlParams.get('stripe_complete')==='true'){
-    showStripeBanner('success','Bank account connected! You can now receive payments. It may take a moment for verification to complete.');
+  const justReturnedFromStripe=urlParams.get('stripe_complete')==='true';
+
+  if(justReturnedFromStripe){
+    showStripeBanner('success','Bank account connected! Verifying with Stripe...');
     window.history.replaceState({},'','/coach.html');
   } else if(urlParams.get('stripe_refresh')==='true'){
     showStripeBanner('error','Onboarding was interrupted. Please click "Connect bank account" again to finish.');
@@ -187,8 +189,52 @@ async function init(){
     currentUser=session.user;
     await loadCoachData();
     renderDashboard();
+
+    // Auto-sync Stripe status: if coach has a Stripe account but isn't
+    // fully verified yet, query Stripe directly and update the database.
+    // This is the self-healing mechanism that replaces the unreliable
+    // account.updated webhook on newer Stripe API versions.
+    if(coachProfile?.stripe_account_id && !coachProfile?.stripe_charges_enabled){
+      syncStripeStatus(justReturnedFromStripe);
+    }
   } else {
     renderAuth('login');
+  }
+}
+
+async function syncStripeStatus(showLoadingState){
+  if(!coachProfile?.id) return;
+
+  // Show inline loading hint if user just completed onboarding
+  if(showLoadingState){
+    const banner=document.querySelector('[data-stripe-card]');
+    if(banner) banner.style.opacity='0.6';
+  }
+
+  try{
+    const res=await fetch('/api/check-coach-status',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({coachId:coachProfile.id})
+    });
+    const data=await res.json();
+
+    if(res.ok && data.synced){
+      // Update local profile state
+      coachProfile.stripe_charges_enabled=data.charges_enabled;
+      coachProfile.stripe_payouts_enabled=data.payouts_enabled;
+      coachProfile.stripe_onboarding_complete=data.onboarding_complete;
+
+      // If status improved, re-render so the banner updates
+      if(data.charges_enabled){
+        renderDashboard();
+        if(showLoadingState){
+          showStripeBanner('success','Payouts active! You can now receive bookings.');
+        }
+      }
+    }
+  } catch(err){
+    console.error('Stripe sync error:',err);
   }
 }
 
@@ -386,7 +432,7 @@ function renderProfileTab(){
   let stripeCard='';
   if(c.status==='approved'){
     if(!c.stripe_account_id){
-      stripeCard=`<div class="card" style="background:#fff3cd;border-color:#e8d89c;margin-bottom:20px">
+      stripeCard=`<div class="card" data-stripe-card style="background:#fff3cd;border-color:#e8d89c;margin-bottom:20px">
         <div style="display:flex;align-items:flex-start;gap:14px">
           <div style="flex-shrink:0;width:36px;height:36px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;color:var(--brand-dark);font-weight:700">!</div>
           <div style="flex:1">
@@ -397,7 +443,7 @@ function renderProfileTab(){
         </div>
       </div>`;
     } else if(!c.stripe_charges_enabled){
-      stripeCard=`<div class="card" style="background:#fff3cd;border-color:#e8d89c;margin-bottom:20px">
+      stripeCard=`<div class="card" data-stripe-card style="background:#fff3cd;border-color:#e8d89c;margin-bottom:20px">
         <div style="display:flex;align-items:flex-start;gap:14px">
           <div style="flex-shrink:0;width:36px;height:36px;border-radius:50%;background:#ffc107;display:flex;align-items:center;justify-content:center;color:#fff">⏱</div>
           <div style="flex:1">
