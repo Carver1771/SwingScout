@@ -172,6 +172,16 @@ let editSpecs=[];
 // AUTH CHECK
 // ══════════════════════════════════════
 async function init(){
+  // Handle Stripe Connect onboarding return
+  const urlParams=new URLSearchParams(window.location.search);
+  if(urlParams.get('stripe_complete')==='true'){
+    showStripeBanner('success','Bank account connected! You can now receive payments. It may take a moment for verification to complete.');
+    window.history.replaceState({},'','/coach.html');
+  } else if(urlParams.get('stripe_refresh')==='true'){
+    showStripeBanner('error','Onboarding was interrupted. Please click "Connect bank account" again to finish.');
+    window.history.replaceState({},'','/coach.html');
+  }
+
   const {data:{session}}=await sb.auth.getSession();
   if(session){
     currentUser=session.user;
@@ -180,6 +190,14 @@ async function init(){
   } else {
     renderAuth('login');
   }
+}
+
+function showStripeBanner(type,msg){
+  const banner=document.createElement('div');
+  banner.style.cssText=`position:fixed;top:0;left:0;right:0;z-index:1000;padding:14px 24px;text-align:center;font-size:14px;font-weight:500;color:#fff;background:${type==='success'?'#1b5e3b':'#dc3545'}`;
+  banner.innerHTML=msg+' <span style="margin-left:12px;cursor:pointer;opacity:.7" onclick="this.parentElement.remove()">✕</span>';
+  document.body.prepend(banner);
+  setTimeout(()=>banner.remove(),8000);
 }
 
 // ══════════════════════════════════════
@@ -364,7 +382,47 @@ function renderProfileTab(){
   const canEdit=c.status==='approved'||!c.profile_submitted;
   const photoSrc=c.photo_url||"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect width='200' height='200' fill='%2314442b'/%3E%3Ctext x='50%25' y='55%25' text-anchor='middle' fill='white' font-size='48' font-family='Arial'%3E"+(c.first_name||'').charAt(0)+(c.last_name||'').charAt(0)+"%3C/text%3E%3C/svg%3E";
 
+  // Stripe Connect status card
+  let stripeCard='';
+  if(c.status==='approved'){
+    if(!c.stripe_account_id){
+      stripeCard=`<div class="card" style="background:#fff3cd;border-color:#e8d89c;margin-bottom:20px">
+        <div style="display:flex;align-items:flex-start;gap:14px">
+          <div style="flex-shrink:0;width:36px;height:36px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;color:var(--brand-dark);font-weight:700">!</div>
+          <div style="flex:1">
+            <div style="font-weight:700;font-size:15px;margin-bottom:4px;color:#856404">Set up payouts to accept bookings</div>
+            <p style="font-size:13px;color:#6b5800;margin-bottom:12px;line-height:1.5">Connect your bank account through Stripe to start receiving payments. Takes about 2 minutes. You'll need your bank routing & account numbers, plus your Social Security number for identity verification.</p>
+            <button class="btn btn-gold" style="width:auto;padding:10px 20px;font-size:14px" onclick="connectStripe()" id="connect-btn">Connect bank account</button>
+          </div>
+        </div>
+      </div>`;
+    } else if(!c.stripe_charges_enabled){
+      stripeCard=`<div class="card" style="background:#fff3cd;border-color:#e8d89c;margin-bottom:20px">
+        <div style="display:flex;align-items:flex-start;gap:14px">
+          <div style="flex-shrink:0;width:36px;height:36px;border-radius:50%;background:#ffc107;display:flex;align-items:center;justify-content:center;color:#fff">⏱</div>
+          <div style="flex:1">
+            <div style="font-weight:700;font-size:15px;margin-bottom:4px;color:#856404">Verification in progress</div>
+            <p style="font-size:13px;color:#6b5800;margin-bottom:12px;line-height:1.5">Stripe is reviewing your information. This usually takes a few minutes but can take up to a few business days. You won't appear bookable on the public site until this completes.</p>
+            <button class="btn btn-outline" style="width:auto;padding:8px 16px;font-size:13px" onclick="connectStripe()">Update info</button>
+          </div>
+        </div>
+      </div>`;
+    } else {
+      stripeCard=`<div class="card" style="background:#d4edda;border-color:#c3e6cb;margin-bottom:20px">
+        <div style="display:flex;align-items:center;gap:14px">
+          <div style="flex-shrink:0;width:36px;height:36px;border-radius:50%;background:var(--success);display:flex;align-items:center;justify-content:center;color:#fff">✓</div>
+          <div style="flex:1">
+            <div style="font-weight:700;font-size:15px;color:#155724">Payouts active</div>
+            <p style="font-size:13px;color:#155724;opacity:.8;margin-top:2px">Bank account connected. You're ready to receive payments from students.</p>
+          </div>
+          <button class="btn btn-outline" style="width:auto;padding:6px 14px;font-size:12px" onclick="connectStripe()">Manage</button>
+        </div>
+      </div>`;
+    }
+  }
+
   return `
+    ${stripeCard}
     <div class="card">
       <div class="profile-preview">
         <img class="profile-photo" src="${photoSrc}" id="preview-photo">
@@ -659,16 +717,60 @@ function renderBookingsTab(){
 }
 
 async function updateBooking(bookingId,newStatus){
-  const {error}=await sb.from('bookings').update({status:newStatus}).eq('id',bookingId);
-  if(error){alert('Error: '+error.message);return}
-  const b=coachBookings.find(x=>x.id===bookingId);
-  if(b){
-    b.status=newStatus;
-    const loc=locations.find(l=>l.id===b.location_id);
-    const dateStr=new Date(b.booking_date+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
-    fetch('/api/send-email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:newStatus==='confirmed'?'booking_confirmed':'booking_declined',data:{studentName:b.student_name,studentEmail:b.student_email,coachName:coachProfile.first_name+' '+coachProfile.last_name,date:dateStr,time:b.booking_time,location:loc?loc.name:''}})}).catch(e=>console.error('Email error:',e));
+  // For Stripe-enabled bookings, route through new API endpoints
+  // (these handle payment capture/refund + send emails)
+  const endpoint=newStatus==='confirmed'?'/api/approve-booking':'/api/cancel-booking';
+
+  const btn=event?.target;
+  const origText=btn?btn.textContent:'';
+  if(btn){btn.disabled=true;btn.textContent='Processing...'}
+
+  try{
+    const res=await fetch(endpoint,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({bookingId})
+    });
+    const data=await res.json();
+
+    if(!res.ok){
+      throw new Error(data.error||'Could not update booking');
+    }
+
+    // Update local state
+    const b=coachBookings.find(x=>x.id===bookingId);
+    if(b){
+      b.status=newStatus==='confirmed'?'confirmed':'cancelled';
+      b.payment_status=newStatus==='confirmed'?'paid':(b.payment_status==='paid'?'refunded':'cancelled');
+    }
+    document.getElementById('tab-content').innerHTML=renderBookingsTab();
+  } catch(err){
+    alert('Error: '+err.message);
+    if(btn){btn.disabled=false;btn.textContent=origText}
   }
-  document.getElementById('tab-content').innerHTML=renderBookingsTab();
+}
+
+async function connectStripe(){
+  const btn=document.getElementById('connect-btn')||event?.target;
+  if(btn){btn.disabled=true;btn.textContent='Loading...'}
+
+  try{
+    const res=await fetch('/api/connect-coach',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({coachId:coachProfile.id})
+    });
+    const data=await res.json();
+
+    if(data.url){
+      window.location.href=data.url;
+    } else {
+      throw new Error(data.error||'Could not start Stripe onboarding');
+    }
+  } catch(err){
+    alert('Error: '+err.message);
+    if(btn){btn.disabled=false;btn.textContent='Connect bank account'}
+  }
 }
 
 // ══════════════════════════════════════
