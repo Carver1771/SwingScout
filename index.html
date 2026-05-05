@@ -710,32 +710,43 @@ function showBooking(id){
 
 function buildCalendar(i,sched){
   const today=new Date();today.setHours(0,0,0,0);
+  const maxDate=new Date(today);maxDate.setDate(maxDate.getDate()+180);
+  const overrides=i.overrides||{};
   const first=new Date(bkYear,bkMonth,1);
   const startDow=(first.getDay()+6)%7; // Mon=0
   const daysInMonth=new Date(bkYear,bkMonth+1,0).getDate();
-  
+
   let cells='';
   // Empty cells before first day
   for(let e=0;e<startDow;e++)cells+=`<div class="cal-day empty"></div>`;
-  
+
   for(let d=1;d<=daysInMonth;d++){
     const dt=new Date(bkYear,bkMonth,d);
     const dow=DOW_MAP[dt.getDay()]; // Sun,Mon,etc
-    const slots=sched[dow]||[];
     const dbDateStr=bkYear+'-'+String(bkMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
-    const availableSlots=slots.filter(s=>!bkCoachBookedSlots.has(dbDateStr+'_'+s));
+
+    // Determine effective slots: override-if-exists, else recurring template
+    let effectiveSlots;
+    if(overrides[dbDateStr]!==undefined){
+      effectiveSlots=overrides[dbDateStr]; // could be empty array (day off)
+    } else {
+      effectiveSlots=sched[dow]||[];
+    }
+
+    const availableSlots=effectiveSlots.filter(s=>!bkCoachBookedSlots.has(dbDateStr+'_'+s));
     const hasSlots=availableSlots.length>0;
     const isPast=dt<today;
+    const isBeyondHorizon=dt>maxDate;
     const isToday=dt.getTime()===today.getTime();
     const isPicked=bkDate&&bkDate.getTime()===dt.getTime();
 
     let cls='cal-day';
-    if(isPast)cls+=' past';
+    if(isPast||isBeyondHorizon)cls+=' past';
     if(isToday)cls+=' today';
-    if(hasSlots&&!isPast)cls+=' has-slots';
+    if(hasSlots&&!isPast&&!isBeyondHorizon)cls+=' has-slots';
     if(isPicked)cls+=' picked';
 
-    if(hasSlots&&!isPast){
+    if(hasSlots&&!isPast&&!isBeyondHorizon){
       cells+=`<div class="${cls}" onclick="pickDate(${bkYear},${bkMonth},${d},'${i.id}')">${d}</div>`;
     } else {
       cells+=`<div class="${cls}">${d}</div>`;
@@ -780,10 +791,18 @@ function renderBooking(i,loc){
 
   // Slot grid (only if date is selected)
   let slotHTML='';
-  if(bkDay&&sched[bkDay]){
+  if(bkDay&&bkDate){
     const dateStr=MNAMES[bkDate.getMonth()]+' '+bkDate.getDate();
     const dbDate=bkDate.getFullYear()+'-'+String(bkDate.getMonth()+1).padStart(2,'0')+'-'+String(bkDate.getDate()).padStart(2,'0');
-    const availableSlots=sched[bkDay].filter(s=>!bkCoachBookedSlots.has(dbDate+'_'+s));
+    const overrides=i.overrides||{};
+    // Override-if-exists, else recurring
+    let effectiveSlots;
+    if(overrides[dbDate]!==undefined){
+      effectiveSlots=overrides[dbDate];
+    } else {
+      effectiveSlots=sched[bkDay]||[];
+    }
+    const availableSlots=effectiveSlots.filter(s=>!bkCoachBookedSlots.has(dbDate+'_'+s));
     if(availableSlots.length===0){
       slotHTML=`<div class="sched-label" style="margin-top:4px">${dateStr} — Pick a Time</div><div style="padding:14px;background:var(--surface);border-radius:8px;text-align:center;font-size:13px;color:var(--text-muted)">All time slots booked for this day. Try another date.</div>`;
     } else {
@@ -826,6 +845,10 @@ function renderBooking(i,loc){
       <div class="fl"><label>Phone</label><input id="bp" type="tel" placeholder="(214) 555-0123"></div>
       <div class="fl"><label>Skill Level</label><select id="bsk"><option>Beginner</option><option>Intermediate</option><option>Advanced</option></select></div>
       ${priceBreakdownHTML}
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--text-secondary);margin-bottom:10px;cursor:pointer;line-height:1.5">
+        <input type="checkbox" id="tos-check" style="margin-top:2px;flex-shrink:0;accent-color:var(--brand);width:14px;height:14px" required>
+        <span>I agree to the Swingable Golf <a href="/policies.html#terms" target="_blank" style="color:var(--brand);text-decoration:underline">Terms of Service</a> and <a href="/policies.html#cancellation" target="_blank" style="color:var(--brand);text-decoration:underline">Cancellation Policy</a>. I understand lessons involve physical activity and assume the associated risk.</span>
+      </label>
       <div style="text-align:center;font-size:11px;color:var(--text-muted);margin-bottom:10px">🔒 Secure payment via Stripe · You won't be charged until ${i.name.split(' ')[0]} confirms</div>
       <button class="sbtn" onclick="subBook('${i.id}')" ${!bkSlot?'style="opacity:.5;cursor:not-allowed" disabled':''}>
         ${confirmTxt}
@@ -850,6 +873,8 @@ function subBook(id){
   if(!bkDate||!bkSlot){alert('Please select a date and time slot.');return}
   const bn=document.getElementById('bn').value.trim(),be=document.getElementById('be').value.trim(),bp=document.getElementById('bp').value.trim(),bsk=document.getElementById('bsk').value;
   if(!bn||!be||!bp){alert('Please fill in your name, email, and phone.');return}
+  const tos=document.getElementById('tos-check');
+  if(!tos||!tos.checked){alert('Please agree to the Terms of Service to continue.');return}
 
   // Show loading state
   const btn=document.querySelector('.sbtn');
@@ -1114,6 +1139,7 @@ async function loadData(){
         specs:c.specialties||[],
         rtexts:cRevs.map(r=>({n:r.reviewer_name,t:r.review_text,r:r.rating})),
         sched:c.schedule||{},
+        overrides:c.availability_overrides||{},
         stripeReady:c.stripe_charges_enabled||false
       };
     });
@@ -1137,5 +1163,10 @@ async function loadData(){
 }
 loadData();
 </script>
+
+<footer style="margin-top:60px;padding:24px 20px;text-align:center;font-size:12px;color:var(--text-muted);border-top:1px solid var(--border-light)">
+  <div style="margin-bottom:6px"><a href="/policies.html" style="color:var(--text-muted);text-decoration:none;margin:0 8px">Policies</a> · <a href="/policies.html#cancellation" style="color:var(--text-muted);text-decoration:none;margin:0 8px">Cancellation Policy</a> · <a href="mailto:team@swingablegolf.com" style="color:var(--text-muted);text-decoration:none;margin:0 8px">Contact</a></div>
+  <div>© 2026 Swingable Golf LLC · Dallas, Texas</div>
+</footer>
 </body>
 </html>
