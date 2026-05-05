@@ -197,6 +197,17 @@ async function init(){
     if(coachProfile?.stripe_account_id && !coachProfile?.stripe_charges_enabled){
       syncStripeStatus(justReturnedFromStripe);
     }
+
+    // Sweep stale bookings (>24h pending auth) — fire and forget
+    fetch('/api/expire-bookings',{method:'POST'})
+      .then(r=>r.json())
+      .then(d=>{
+        if(d.expired>0){
+          // Reload bookings to remove the now-expired ones
+          loadCoachData().then(renderDashboard);
+        }
+      })
+      .catch(err=>console.error('Expire sweep failed:',err));
   } else {
     renderAuth('login');
   }
