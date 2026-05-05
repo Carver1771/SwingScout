@@ -120,22 +120,28 @@ export default async function handler(req, res) {
       weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
     });
 
-    fetch(`${process.env.SITE_URL || 'https://swingablegolf.com'}/api/send-email`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        type: 'booking_confirmed',
-        data: {
-          studentName: booking.student_name,
-          studentEmail: booking.student_email,
-          coachName: `${booking.coaches.first_name} ${booking.coaches.last_name}`,
-          coachEmail: booking.coaches.email,
-          date: dateStr,
-          time: booking.booking_time,
-          location: booking.locations?.name || 'TBD',
-        },
-      }),
-    }).catch(e => console.error('Email send failed:', e));
+    // Send confirmation email - MUST await so the serverless function
+    // doesn't terminate before the email request completes
+    try {
+      await fetch(`${process.env.SITE_URL || 'https://swingablegolf.com'}/api/send-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'booking_confirmed',
+          data: {
+            studentName: booking.student_name,
+            studentEmail: booking.student_email,
+            coachName: `${booking.coaches.first_name} ${booking.coaches.last_name}`,
+            coachEmail: booking.coaches.email,
+            date: dateStr,
+            time: booking.booking_time,
+            location: booking.locations?.name || 'TBD',
+          },
+        }),
+      });
+    } catch (emailErr) {
+      console.error('Email send failed:', emailErr);
+    }
 
     return res.status(200).json({
       success: true,
