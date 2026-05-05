@@ -76,7 +76,7 @@ export default async function handler(req, res) {
         .eq('id', bookingId);
 
       // Still send the decline email
-      sendDeclineEmail(booking, 'declined');
+      await sendDeclineEmail(booking, 'declined');
 
       return res.status(200).json({ success: true, action: 'cancelled' });
     }
@@ -145,7 +145,7 @@ export default async function handler(req, res) {
       });
     }
 
-    sendDeclineEmail(booking, action);
+    await sendDeclineEmail(booking, action);
 
     return res.status(200).json({ success: true, action });
 
@@ -157,21 +157,25 @@ export default async function handler(req, res) {
   }
 }
 
-function sendDeclineEmail(booking, action) {
-  fetch(`${process.env.SITE_URL || 'https://swingablegolf.com'}/api/send-email`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      type: action === 'refunded' ? 'booking_refunded' : 'booking_declined',
-      data: {
-        studentName: booking.student_name,
-        studentEmail: booking.student_email,
-        coachName: `${booking.coaches.first_name} ${booking.coaches.last_name}`,
-        coachEmail: booking.coaches.email,
-        date: booking.booking_date,
-        time: booking.booking_time,
-        amount: booking.amount_paid ? `$${(booking.amount_paid / 100).toFixed(2)}` : null,
-      },
-    }),
-  }).catch(e => console.error('Email send failed:', e));
+async function sendDeclineEmail(booking, action) {
+  try {
+    await fetch(`${process.env.SITE_URL || 'https://swingablegolf.com'}/api/send-email`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: action === 'refunded' ? 'booking_refunded' : 'booking_declined',
+        data: {
+          studentName: booking.student_name,
+          studentEmail: booking.student_email,
+          coachName: `${booking.coaches.first_name} ${booking.coaches.last_name}`,
+          coachEmail: booking.coaches.email,
+          date: booking.booking_date,
+          time: booking.booking_time,
+          amount: booking.amount_paid ? `$${(booking.amount_paid / 100).toFixed(2)}` : null,
+        },
+      }),
+    });
+  } catch (e) {
+    console.error('Email send failed:', e);
+  }
 }
