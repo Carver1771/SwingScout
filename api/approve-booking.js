@@ -136,6 +136,7 @@ export default async function handler(req, res) {
             date: dateStr,
             time: booking.booking_time,
             location: booking.locations?.name || 'TBD',
+            studentToken: booking.student_token,
           },
         }),
       });
