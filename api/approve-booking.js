@@ -137,6 +137,7 @@ export default async function handler(req, res) {
             time: booking.booking_time,
             location: booking.locations?.name || 'TBD',
             studentToken: booking.student_token,
+            lessonInstructions: getLessonInstructions(booking),
           },
         }),
       });
@@ -156,4 +157,24 @@ export default async function handler(req, res) {
       error: err.message || 'Could not approve booking'
     });
   }
+}
+
+function getLessonInstructions(booking) {
+  const coach = booking.coaches || {};
+  const location = booking.locations;
+  const coachInstructions = coach.location_instructions || {};
+
+  let coachNote = '';
+  if (booking.location_id && coachInstructions[booking.location_id]) {
+    coachNote = coachInstructions[booking.location_id];
+  } else if (!booking.location_id && coachInstructions.custom) {
+    coachNote = coachInstructions.custom;
+  }
+
+  const locationDefault = location?.default_instructions || '';
+
+  const parts = [];
+  if (locationDefault) parts.push(locationDefault);
+  if (coachNote) parts.push(coachNote);
+  return parts.join('\n\n');
 }
