@@ -229,6 +229,9 @@ function bookingRequestStudentEmail(d) {
 }
 
 function bookingConfirmedEmail(d) {
+  const manageLink = d.studentToken
+    ? `https://swingablegolf.com/my-booking.html?token=${d.studentToken}`
+    : 'https://swingablegolf.com';
   return `<div style="${baseStyle}">
     <h2 style="color:#14442b">You're Confirmed!</h2>
     <p>Hi ${d.studentName.split(' ')[0]},</p>
@@ -238,8 +241,9 @@ function bookingConfirmedEmail(d) {
       <strong>Time:</strong> ${d.time}<br>
       <strong>Location:</strong> ${d.location}
     </p>
-    <p>${d.coachName.split(' ')[0]} will reach out shortly with logistics. Don't forget your clubs (or ask if loaners are available).</p>
-    <p style="color:#9e9e9e;font-size:12px;margin-top:32px">Swingable Golf · Need to cancel? Reply to this email.</p>
+    <p>If you have any questions before your lesson, you can message ${d.coachName.split(' ')[0]} directly from your booking page below.</p>
+    <a href="${manageLink}" style="${buttonStyle}">View or manage booking</a>
+    <p style="color:#9e9e9e;font-size:12px;margin-top:32px">Bookmark the link above to manage your booking anytime.<br>Swingable Golf · Need to cancel? You can do it from the booking page.</p>
   </div>`;
 }
 
