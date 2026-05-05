@@ -323,8 +323,7 @@ async function handleAuth(mode){
     });
     if(profErr)console.error('Profile creation error:',profErr);
 
-    // Send notification emails
-    fetch('/api/send-email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'coach_application',data:{coachName:first+' '+last,coachEmail:email,location:'Not set yet',price:100,specialties:'Not set yet'}})}).catch(e=>console.error('Email error:',e));
+    // Don't send application email here — only when profile is submitted for review
 
     await loadCoachData();
     renderDashboard();
@@ -783,11 +782,23 @@ function renderBookingsTab(){
     const loc=locations.find(l=>l.id===b.location_id);
     const badgeClass='badge-'+b.status;
     const dateStr=new Date(b.booking_date+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
-    const actions=b.status==='pending'?`
-      <div style="display:flex;gap:8px;margin-top:8px">
-        <button style="padding:6px 16px;background:var(--success);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer" onclick="updateBooking('${b.id}','confirmed')">Approve</button>
-        <button style="padding:6px 16px;background:var(--danger);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer" onclick="updateBooking('${b.id}','cancelled')">Decline</button>
-      </div>`:'';
+
+    let actions='';
+    if(b.status==='pending'){
+      actions=`
+        <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+          <button style="padding:6px 16px;background:var(--success);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer" onclick="updateBooking('${b.id}','confirmed')">Approve</button>
+          <button style="padding:6px 16px;background:var(--danger);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer" onclick="updateBooking('${b.id}','cancelled')">Decline</button>
+          <a href="mailto:${b.student_email}?subject=Your%20Swingable%20Golf%20Lesson%20Request" style="padding:6px 16px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;text-decoration:none">Email Student</a>
+        </div>`;
+    } else if(b.status==='confirmed'){
+      actions=`
+        <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+          <a href="mailto:${b.student_email}?subject=Your%20Swingable%20Golf%20Lesson%20on%20${encodeURIComponent(dateStr)}" style="padding:6px 16px;background:var(--brand);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;text-decoration:none">Email Student</a>
+          <button style="padding:6px 16px;background:var(--surface);color:var(--danger);border:1px solid var(--danger);border-radius:6px;font-size:12px;font-weight:600;cursor:pointer" onclick="cancelConfirmedLesson('${b.id}')">Cancel Lesson</button>
+        </div>`;
+    }
+
     return `
       <div class="booking-item" style="flex-wrap:wrap">
         <div class="booking-details">
@@ -828,6 +839,39 @@ function renderBookingsTab(){
       ${subTabs}
       ${items}
     </div>`;
+}
+
+async function cancelConfirmedLesson(bookingId){
+  const b=coachBookings.find(x=>x.id===bookingId);
+  if(!b)return;
+  const dateStr=new Date(b.booking_date+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  const confirmMsg=`Cancel this lesson with ${b.student_name} on ${dateStr}?\n\nThe student will be fully refunded and your payout will be reversed. They will be notified.`;
+  if(!confirm(confirmMsg))return;
+
+  const btn=event?.target;
+  if(btn){btn.disabled=true;btn.textContent='Cancelling...'}
+
+  try{
+    const res=await fetch('/api/cancel-booking',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        bookingId,
+        cancelledBy:'coach',
+        reason:'requested_by_customer'
+      })
+    });
+    const data=await res.json();
+    if(!res.ok)throw new Error(data.error||'Could not cancel');
+
+    // Update local state
+    b.status='cancelled';
+    b.payment_status=data.refunded?'refunded':'cancelled';
+    document.getElementById('tab-content').innerHTML=renderBookingsTab();
+  } catch(err){
+    alert('Error: '+err.message);
+    if(btn){btn.disabled=false;btn.textContent='Cancel Lesson'}
+  }
 }
 
 async function updateBooking(bookingId,newStatus){
