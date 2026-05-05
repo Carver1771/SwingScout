@@ -405,7 +405,7 @@ function renderDashboard(){
       <div class="tabs">
         <div class="tab ${activeTab==='profile'?'active':''}" onclick="activeTab='profile';renderDashboard()">Profile</div>
         <div class="tab ${activeTab==='availability'?'active':''}" onclick="activeTab='availability';renderDashboard()">Availability</div>
-        <div class="tab ${activeTab==='bookings'?'active':''}" onclick="activeTab='bookings';renderDashboard()">Bookings${coachBookings.length?' ('+coachBookings.length+')':''}</div>
+        <div class="tab ${activeTab==='bookings'?'active':''}" onclick="activeTab='bookings';renderDashboard()">Bookings${(()=>{const today=new Date();today.setHours(0,0,0,0);const p=coachBookings.filter(b=>b.status==='pending'&&new Date(b.booking_date+'T12:00:00')>=today).length;return p?' <span style="background:var(--danger);color:#fff;font-size:11px;padding:2px 7px;border-radius:10px;margin-left:4px;font-weight:700">'+p+'</span>':'';})()}</div>
       </div>
 
       <div id="tab-content">${renderTabContent()}</div>
@@ -729,12 +729,46 @@ async function saveAvailability(){
 // ══════════════════════════════════════
 // BOOKINGS TAB
 // ══════════════════════════════════════
+let bookingSubTab='pending'; // 'pending' | 'upcoming' | 'past'
+
 function renderBookingsTab(){
   if(!coachBookings.length){
     return `<div class="card"><div class="empty"><h3>No bookings yet</h3><p>When students book lessons with you, they'll appear here.</p></div></div>`;
   }
 
-  const items=coachBookings.map(b=>{
+  // Categorize bookings
+  const today=new Date();
+  today.setHours(0,0,0,0);
+
+  const pending=[];
+  const upcoming=[];
+  const past=[];
+
+  coachBookings.forEach(b=>{
+    const bookingDate=new Date(b.booking_date+'T12:00:00');
+    const isPast=bookingDate<today;
+
+    if(isPast){
+      past.push(b);
+    } else if(b.status==='pending'){
+      pending.push(b);
+    } else if(b.status==='confirmed'){
+      upcoming.push(b);
+    } else {
+      // Cancelled future bookings go to past (less prominent)
+      past.push(b);
+    }
+  });
+
+  // Sort: pending by date ascending, upcoming by date ascending, past by date descending
+  pending.sort((a,b)=>a.booking_date.localeCompare(b.booking_date));
+  upcoming.sort((a,b)=>a.booking_date.localeCompare(b.booking_date));
+  past.sort((a,b)=>b.booking_date.localeCompare(a.booking_date));
+
+  // Determine which list to display
+  const activeList=bookingSubTab==='pending'?pending:bookingSubTab==='upcoming'?upcoming:past;
+
+  const renderItem=b=>{
     const loc=locations.find(l=>l.id===b.location_id);
     const badgeClass='badge-'+b.status;
     const dateStr=new Date(b.booking_date+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
@@ -753,11 +787,34 @@ function renderBookingsTab(){
         </div>
         <span class="booking-badge ${badgeClass}">${b.status}</span>
       </div>`;
-  }).join('');
+  };
+
+  const emptyState={
+    pending:`<div class="empty" style="padding:40px 20px"><p style="color:var(--text-muted);font-size:14px">No pending requests right now.</p></div>`,
+    upcoming:`<div class="empty" style="padding:40px 20px"><p style="color:var(--text-muted);font-size:14px">No upcoming lessons booked.</p></div>`,
+    past:`<div class="empty" style="padding:40px 20px"><p style="color:var(--text-muted);font-size:14px">No past lessons yet.</p></div>`,
+  };
+
+  const items=activeList.length?activeList.map(renderItem).join(''):emptyState[bookingSubTab];
+
+  // Sub-tabs styled inline to match existing tab visual
+  const subTabs=`
+    <div style="display:flex;gap:24px;border-bottom:1px solid var(--border-light);margin-bottom:16px;padding:0 4px">
+      <div onclick="bookingSubTab='pending';document.getElementById('tab-content').innerHTML=renderBookingsTab()" style="padding:10px 0;cursor:pointer;font-size:14px;font-weight:${bookingSubTab==='pending'?'600':'500'};color:${bookingSubTab==='pending'?'var(--brand)':'var(--text-secondary)'};border-bottom:2px solid ${bookingSubTab==='pending'?'var(--brand)':'transparent'};margin-bottom:-1px">
+        Pending${pending.length?' <span style="background:var(--gold);color:var(--brand-dark);font-size:11px;padding:1px 7px;border-radius:10px;margin-left:4px;font-weight:700">'+pending.length+'</span>':''}
+      </div>
+      <div onclick="bookingSubTab='upcoming';document.getElementById('tab-content').innerHTML=renderBookingsTab()" style="padding:10px 0;cursor:pointer;font-size:14px;font-weight:${bookingSubTab==='upcoming'?'600':'500'};color:${bookingSubTab==='upcoming'?'var(--brand)':'var(--text-secondary)'};border-bottom:2px solid ${bookingSubTab==='upcoming'?'var(--brand)':'transparent'};margin-bottom:-1px">
+        Upcoming${upcoming.length?' ('+upcoming.length+')':''}
+      </div>
+      <div onclick="bookingSubTab='past';document.getElementById('tab-content').innerHTML=renderBookingsTab()" style="padding:10px 0;cursor:pointer;font-size:14px;font-weight:${bookingSubTab==='past'?'600':'500'};color:${bookingSubTab==='past'?'var(--brand)':'var(--text-secondary)'};border-bottom:2px solid ${bookingSubTab==='past'?'var(--brand)':'transparent'};margin-bottom:-1px">
+        Past${past.length?' ('+past.length+')':''}
+      </div>
+    </div>
+  `;
 
   return `
     <div class="card">
-      <div class="card-title">Your Bookings (${coachBookings.length})</div>
+      ${subTabs}
       ${items}
     </div>`;
 }
