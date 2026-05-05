@@ -670,14 +670,41 @@ function showProfile(id){
   mr.innerHTML=`<div class="mo" onclick="cM()"><div class="md" onclick="event.stopPropagation()"><div class="ph"><button class="cb" onclick="cM()">✕</button><img src="${i.photo}"><div class="nm">${i.name}</div><div class="lc">${pSvg} ${loc.name}, ${loc.city}</div><div class="rt"><span class="stars">${rs(i.rating)}</span><span class="n">${i.rating}</span><span class="rv">(${i.revs} reviews)</span></div><div class="pr">$${i.price}<span>/hr</span></div></div><div class="pb"><div class="badges">${i.demo?'<span class="demo-tag">Example Profile</span>':''}${i.pga?'<span class="badge badge-pga">PGA Certified</span>':''}<span class="badge badge-exp">${i.yrs}+ YEARS</span><span class="badge badge-lessons">${i.lessons} LESSONS</span></div><div class="st">About</div><div class="ab">${i.full}</div><div class="st" style="margin-top:18px">Specialties</div><div class="specs">${i.specs.map(s=>`<span class="spec">${s}</span>`).join('')}</div>${reviewsHTML}<button class="btn btn-outline" style="width:100%;margin-top:14px;padding:10px" onclick="event.stopPropagation();showReviewForm('${i.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:6px"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>Leave a Review</button>${schedDays?`<div class="st" style="margin-top:18px">Availability</div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">${schedDays}</div>`:''}${bookBtnHTML}</div></div></div>`;
 }
 let bkDay=null,bkSlot=null,bkOpen=false,bkDate=null,bkMonth=null,bkYear=null;
+let bkCoachBookedSlots=new Set(); // "YYYY-MM-DD_HH:MM" of taken slots for current coach
 const DAYS=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 const MNAMES=['January','February','March','April','May','June','July','August','September','October','November','December'];
 const DOW_MAP=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+async function fetchCoachBookings(coachId){
+  // Fetch all non-cancelled bookings for this coach (future only)
+  const today=new Date();
+  const todayStr=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+
+  const {data,error}=await sb.from('bookings')
+    .select('booking_date,booking_time,status,payment_status')
+    .eq('coach_id',coachId)
+    .gte('booking_date',todayStr)
+    .neq('status','cancelled');
+
+  bkCoachBookedSlots.clear();
+  if(error){console.error('Could not fetch coach bookings:',error);return}
+
+  (data||[]).forEach(b=>{
+    // Don't block slots for refunded or failed payments
+    if(b.payment_status==='refunded'||b.payment_status==='failed'||b.payment_status==='cancelled')return;
+    bkCoachBookedSlots.add(b.booking_date+'_'+b.booking_time);
+  });
+}
 
 function showBooking(id){
   bkDay=null;bkSlot=null;bkDate=null;bkOpen=false;
   const now=new Date();bkMonth=now.getMonth();bkYear=now.getFullYear();
   const i=instructors.find(x=>x.id===id);const loc=gL(i.lid);lS();
+  // Fetch existing bookings then render
+  fetchCoachBookings(id).then(()=>{
+    renderBooking(i,loc);
+  });
+  // Render initial state immediately so modal doesn't feel laggy
   renderBooking(i,loc);
 }
 
@@ -695,17 +722,19 @@ function buildCalendar(i,sched){
     const dt=new Date(bkYear,bkMonth,d);
     const dow=DOW_MAP[dt.getDay()]; // Sun,Mon,etc
     const slots=sched[dow]||[];
-    const hasSlots=slots.length>0;
+    const dbDateStr=bkYear+'-'+String(bkMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    const availableSlots=slots.filter(s=>!bkCoachBookedSlots.has(dbDateStr+'_'+s));
+    const hasSlots=availableSlots.length>0;
     const isPast=dt<today;
     const isToday=dt.getTime()===today.getTime();
     const isPicked=bkDate&&bkDate.getTime()===dt.getTime();
-    
+
     let cls='cal-day';
     if(isPast)cls+=' past';
     if(isToday)cls+=' today';
     if(hasSlots&&!isPast)cls+=' has-slots';
     if(isPicked)cls+=' picked';
-    
+
     if(hasSlots&&!isPast){
       cells+=`<div class="${cls}" onclick="pickDate(${bkYear},${bkMonth},${d},'${i.id}')">${d}</div>`;
     } else {
@@ -753,7 +782,13 @@ function renderBooking(i,loc){
   let slotHTML='';
   if(bkDay&&sched[bkDay]){
     const dateStr=MNAMES[bkDate.getMonth()]+' '+bkDate.getDate();
-    slotHTML=`<div class="sched-label" style="margin-top:4px">${dateStr} — Pick a Time</div><div class="slot-grid">${sched[bkDay].map(s=>`<div class="slot-btn ${bkSlot===s?'picked':''}" onclick="pickSlot('${s}','${i.id}')">${s}</div>`).join('')}</div>`;
+    const dbDate=bkDate.getFullYear()+'-'+String(bkDate.getMonth()+1).padStart(2,'0')+'-'+String(bkDate.getDate()).padStart(2,'0');
+    const availableSlots=sched[bkDay].filter(s=>!bkCoachBookedSlots.has(dbDate+'_'+s));
+    if(availableSlots.length===0){
+      slotHTML=`<div class="sched-label" style="margin-top:4px">${dateStr} — Pick a Time</div><div style="padding:14px;background:var(--surface);border-radius:8px;text-align:center;font-size:13px;color:var(--text-muted)">All time slots booked for this day. Try another date.</div>`;
+    } else {
+      slotHTML=`<div class="sched-label" style="margin-top:4px">${dateStr} — Pick a Time</div><div class="slot-grid">${availableSlots.map(s=>`<div class="slot-btn ${bkSlot===s?'picked':''}" onclick="pickSlot('${s}','${i.id}')">${s}</div>`).join('')}</div>`;
+    }
   }
 
   // Selected slot display
