@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>My Booking — Swingable Golf</title>
+<link rel="icon" type="image/svg+xml" href="/logo-icon.svg">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --brand:#1b5e3b;--brand-light:#2a7d50;--brand-lighter:#e8f5ec;--brand-dark:#14442b;
+  --gold:#c9a84c;--gold-light:#f7f0db;
+  --bg:#fafaf8;--card:#ffffff;--surface:#f4f3f0;
+  --text:#1a1a1a;--text-secondary:#6b6b6b;--text-muted:#9e9e9e;
+  --border:#e8e6e1;--border-light:#f0eeea;
+  --danger:#dc3545;--success:#28a745;--warning:#ffc107;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
+
+.header{background:var(--brand-dark);padding:14px 24px;display:flex;align-items:center;gap:10px}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:#fff}
+.logo-icon-img{height:34px;width:auto;display:block;flex-shrink:0}
+.logo-text{font-family:'Libre Baskerville',serif;font-size:18px;font-weight:700;color:#fff}
+
+.wrap{flex:1;max-width:600px;margin:40px auto;padding:0 20px;width:100%}
+.card{background:var(--card);border-radius:16px;padding:32px;box-shadow:0 4px 24px rgba(0,0,0,.06);border:1px solid var(--border-light);margin-bottom:16px}
+
+h1{font-family:'Libre Baskerville',serif;font-size:24px;font-weight:700;margin-bottom:8px}
+.subtitle{color:var(--text-secondary);font-size:15px;margin-bottom:24px}
+
+.status-banner{padding:14px 18px;border-radius:10px;margin-bottom:20px;font-size:14px;font-weight:500;display:flex;align-items:center;gap:10px}
+.status-banner.pending{background:var(--gold-light);color:#856404;border:1px solid #e8d89c}
+.status-banner.confirmed{background:var(--brand-lighter);color:var(--brand-dark);border:1px solid #b8d9c2}
+.status-banner.cancelled{background:#f8d7da;color:#721c24;border:1px solid #f5c2c7}
+.status-banner.refunded{background:#d1ecf1;color:#0c5460;border:1px solid #bee5eb}
+.status-icon{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;font-weight:700}
+.status-banner.pending .status-icon{background:#ffc107;color:#fff}
+.status-banner.confirmed .status-icon{background:var(--success);color:#fff}
+.status-banner.cancelled .status-icon{background:var(--danger);color:#fff}
+.status-banner.refunded .status-icon{background:#17a2b8;color:#fff}
+
+.detail-box{background:var(--surface);border-radius:12px;padding:18px 20px;margin-bottom:16px}
+.detail-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border-light);font-size:14px}
+.detail-row:last-child{border-bottom:none}
+.detail-label{color:var(--text-secondary);font-weight:500}
+.detail-value{color:var(--text);font-weight:600;text-align:right}
+
+.coach-card{display:flex;align-items:center;gap:14px;padding:14px;background:var(--bg);border-radius:10px;margin-bottom:16px}
+.coach-photo{width:50px;height:50px;border-radius:50%;object-fit:cover;flex-shrink:0}
+.coach-info{flex:1;min-width:0}
+.coach-name{font-weight:600;font-size:15px}
+.coach-meta{font-size:13px;color:var(--text-muted)}
+
+.lesson-notes{background:#fff8e1;border-radius:10px;padding:14px 16px;border:1px solid #ffe0a0;margin-bottom:16px;font-size:13px;line-height:1.6}
+.lesson-notes-title{font-weight:700;font-size:13px;margin-bottom:6px;color:#5c4500}
+
+.btn{display:inline-block;padding:12px 24px;background:var(--brand);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;text-decoration:none;cursor:pointer;font-family:inherit}
+.btn:hover{background:var(--brand-light)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-danger{background:var(--danger)}
+.btn-danger:hover{background:#c82333}
+.btn-outline{background:transparent;color:var(--brand);border:1.5px solid var(--brand)}
+.btn-outline:hover{background:var(--brand-lighter)}
+
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+
+.message-form{margin-top:16px}
+.message-form textarea{width:100%;padding:12px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px;min-height:100px;resize:vertical}
+.message-form textarea:focus{outline:none;border-color:var(--brand)}
+
+.refund-info{background:var(--bg);border:1px solid var(--border-light);border-radius:10px;padding:12px 16px;margin-top:12px;font-size:13px;color:var(--text-secondary);line-height:1.5}
+
+.empty-state{text-align:center;padding:40px 20px}
+.empty-state h2{font-family:'Libre Baskerville',serif;font-size:20px;margin-bottom:8px}
+.empty-state p{color:var(--text-muted);font-size:14px}
+
+@media(max-width:640px){
+  .card{padding:24px 18px}
+  .btn-row{flex-direction:column}
+  .btn{width:100%;text-align:center}
+  .detail-row{flex-direction:column;align-items:flex-start;gap:2px}
+  .detail-value{text-align:left}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a href="/" class="logo">
+    <img src="/logo-icon.svg" class="logo-icon-img" alt="Swingable Golf">
+    <span class="logo-text">Swingable Golf</span>
+  </a>
+</div>
+
+<div class="wrap">
+  <div id="content">
+    <div class="card"><div class="empty-state"><p>Loading your booking...</p></div></div>
+  </div>
+</div>
+
+<script>
+const SB_URL='https://quqknhjdjvdzqyjpglub.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF1cWtuaGpkanZkenF5anBnbHViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMTI2OTMsImV4cCI6MjA5Mjg4ODY5M30.cP-LdZSLJFukvx51wwlQUzmfO_-WXyRAS58CToX0XFA';
+const sb=window.supabase.createClient(SB_URL,SB_KEY);
+
+const params=new URLSearchParams(window.location.search);
+const token=params.get('token');
+
+const MNAMES=['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+async function loadBooking(){
+  if(!token){
+    showError('No booking token in URL.','Booking links should be opened from your confirmation email.');
+    return;
+  }
+
+  try{
+    const {data:booking,error}=await sb.from('bookings')
+      .select('*, coaches(first_name,last_name,email,phone,photo_url,short_bio,custom_facility_name,custom_facility_address), locations(name,city,address)')
+      .eq('student_token',token)
+      .single();
+
+    if(error||!booking){
+      showError('Booking not found.','This link may have expired or is invalid. Check your email for the correct link.');
+      return;
+    }
+
+    renderBooking(booking);
+  }catch(err){
+    console.error('Load error:',err);
+    showError('Could not load booking.','Please try again later or contact support.');
+  }
+}
+
+function renderBooking(b){
+  const coach=b.coaches||{};
+  const loc=b.locations;
+  const coachName=`${coach.first_name||''} ${coach.last_name||''}`.trim();
+  const dt=new Date(b.booking_date+'T12:00:00');
+  const dateStr=`${MNAMES[dt.getMonth()]} ${dt.getDate()}, ${dt.getFullYear()}`;
+  const dayOfWeek=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][dt.getDay()];
+  const totalAmount=b.amount_paid?`$${(b.amount_paid/100).toFixed(2)}`:`$${b.price}`;
+
+  // Determine status display
+  const today=new Date();today.setHours(0,0,0,0);
+  const isPast=dt<today;
+  const hoursUntilLesson=(dt-Date.now())/(1000*60*60);
+  const canCancelWithFullRefund=hoursUntilLesson>24;
+
+  let statusBanner;
+  let actions='';
+
+  if(b.status==='cancelled'||b.status==='refunded'){
+    if(b.payment_status==='refunded'){
+      statusBanner=`<div class="status-banner refunded"><div class="status-icon">↻</div><div><strong>Refunded</strong><br><span style="font-weight:400;font-size:13px">Funds returned to your card. Allow 5-10 business days to appear.</span></div></div>`;
+    } else {
+      statusBanner=`<div class="status-banner cancelled"><div class="status-icon">✕</div><div><strong>Cancelled</strong><br><span style="font-weight:400;font-size:13px">No charge was made to your card.</span></div></div>`;
+    }
+  } else if(b.status==='confirmed'){
+    if(isPast){
+      statusBanner=`<div class="status-banner confirmed"><div class="status-icon">✓</div><div><strong>Lesson completed</strong><br><span style="font-weight:400;font-size:13px">We hope it went well!</span></div></div>`;
+    } else {
+      statusBanner=`<div class="status-banner confirmed"><div class="status-icon">✓</div><div><strong>Confirmed</strong><br><span style="font-weight:400;font-size:13px">${coachName.split(' ')[0]} confirmed your lesson.</span></div></div>`;
+      const refundLine=canCancelWithFullRefund
+        ?`<div class="refund-info">📌 Cancellation policy: full refund if cancelled at least 24 hours before the lesson. Cancellations within 24 hours are not refundable.</div>`
+        :`<div class="refund-info" style="background:#fff3cd;border-color:#e8d89c;color:#856404">⚠️ Less than 24 hours until your lesson — cancellations are not refundable.</div>`;
+      actions=`
+        ${refundLine}
+        <div class="btn-row">
+          <button class="btn btn-danger" onclick="cancelBooking()">${canCancelWithFullRefund?'Cancel & Refund':'Cancel (no refund)'}</button>
+          <button class="btn btn-outline" onclick="toggleMessage()">Message ${coachName.split(' ')[0]}</button>
+        </div>`;
+    }
+  } else if(b.status==='pending'){
+    statusBanner=`<div class="status-banner pending"><div class="status-icon">⏱</div><div><strong>Awaiting confirmation</strong><br><span style="font-weight:400;font-size:13px">${coachName.split(' ')[0]} has up to 24 hours to confirm. Your card is authorized but not yet charged.</span></div></div>`;
+    actions=`
+      <div class="refund-info">📌 You can cancel anytime before ${coachName.split(' ')[0]} confirms — your card will not be charged.</div>
+      <div class="btn-row">
+        <button class="btn btn-danger" onclick="cancelBooking()">Cancel request</button>
+        <button class="btn btn-outline" onclick="toggleMessage()">Message ${coachName.split(' ')[0]}</button>
+      </div>`;
+  }
+
+  const photoSrc=coach.photo_url||"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='50' height='50'%3E%3Crect width='50' height='50' fill='%2314442b'/%3E%3Ctext x='50%25' y='55%25' text-anchor='middle' fill='white' font-size='18' font-family='Arial'%3E"+(coach.first_name||'').charAt(0)+(coach.last_name||'').charAt(0)+"%3C/text%3E%3C/svg%3E";
+
+  const locName=loc?loc.name:(coach.custom_facility_name||'TBD');
+  const locAddress=loc?loc.address:(coach.custom_facility_address||'');
+
+  document.getElementById('content').innerHTML=`
+    <div class="card">
+      <h1>Your Lesson</h1>
+      <p class="subtitle">${dayOfWeek}, ${dateStr} at ${b.booking_time}</p>
+
+      ${statusBanner}
+
+      <div class="coach-card">
+        <img src="${photoSrc}" class="coach-photo">
+        <div class="coach-info">
+          <div class="coach-name">${coachName}</div>
+          <div class="coach-meta">${locName}</div>
+        </div>
+      </div>
+
+      <div class="detail-box">
+        <div class="detail-row"><span class="detail-label">Date</span><span class="detail-value">${dateStr}</span></div>
+        <div class="detail-row"><span class="detail-label">Time</span><span class="detail-value">${b.booking_time}</span></div>
+        <div class="detail-row"><span class="detail-label">Location</span><span class="detail-value">${locName}</span></div>
+        ${locAddress?`<div class="detail-row"><span class="detail-label">Address</span><span class="detail-value">${locAddress}</span></div>`:''}
+        <div class="detail-row"><span class="detail-label">Lesson rate</span><span class="detail-value">$${b.price}.00</span></div>
+        <div class="detail-row"><span class="detail-label">Service fee</span><span class="detail-value">$${(b.amount_paid/100-b.price).toFixed(2)}</span></div>
+        <div class="detail-row" style="padding-top:12px;border-top:2px solid var(--border)"><span class="detail-label" style="font-weight:700;color:var(--text)">Total</span><span class="detail-value" style="color:var(--brand);font-size:16px">${totalAmount}</span></div>
+      </div>
+
+      ${actions}
+
+      <div id="message-form" style="display:none" class="message-form">
+        <h3 style="font-size:15px;margin-bottom:8px">Send a message to ${coachName.split(' ')[0]}</h3>
+        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:10px">They'll receive your message at ${coach.email||'their email'}. Reply directly via email.</p>
+        <textarea id="message-text" placeholder="Hi ${coachName.split(' ')[0]}, I had a quick question about..."></textarea>
+        <div class="btn-row" style="margin-top:10px">
+          <button class="btn" onclick="sendMessage()">Send</button>
+          <button class="btn btn-outline" onclick="toggleMessage()">Cancel</button>
+        </div>
+        <div id="message-result" style="margin-top:10px;font-size:13px"></div>
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-top:16px">
+      <a href="/" style="color:var(--text-muted);font-size:13px;text-decoration:none">← Back to Swingable Golf</a>
+    </div>
+  `;
+
+  // Store for cancel function
+  window._currentBooking=b;
+  window._canCancelWithRefund=canCancelWithFullRefund;
+}
+
+async function cancelBooking(){
+  const b=window._currentBooking;
+  const willRefund=window._canCancelWithRefund;
+  const isPending=b.status==='pending';
+
+  let confirmMsg;
+  if(isPending){
+    confirmMsg='Cancel your booking request? Your card will not be charged.';
+  } else if(willRefund){
+    confirmMsg='Cancel and refund this lesson? You\'ll receive a full refund within 5-10 business days.';
+  } else {
+    confirmMsg='Cancel this lesson? Because it\'s within 24 hours, no refund will be issued. Are you sure?';
+  }
+
+  if(!confirm(confirmMsg))return;
+
+  try{
+    const res=await fetch('/api/cancel-booking',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        bookingId:b.id,
+        studentToken:token,
+        cancelledBy:'student',
+        reason:isPending?'student_cancelled_pending':(willRefund?'student_cancelled_with_refund':'student_cancelled_no_refund')
+      })
+    });
+    const data=await res.json();
+    if(!res.ok){
+      alert('Could not cancel: '+(data.error||'Unknown error'));
+      return;
+    }
+    // Reload to show updated status
+    loadBooking();
+  }catch(err){
+    alert('Error: '+err.message);
+  }
+}
+
+function toggleMessage(){
+  const form=document.getElementById('message-form');
+  form.style.display=form.style.display==='none'?'block':'none';
+}
+
+async function sendMessage(){
+  const text=document.getElementById('message-text').value.trim();
+  const result=document.getElementById('message-result');
+  if(!text){result.innerHTML='<span style="color:var(--danger)">Message cannot be empty.</span>';return}
+
+  result.innerHTML='Sending...';
+  try{
+    const res=await fetch('/api/send-message',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        bookingId:window._currentBooking.id,
+        studentToken:token,
+        senderType:'student',
+        message:text
+      })
+    });
+    const data=await res.json();
+    if(!res.ok){
+      result.innerHTML='<span style="color:var(--danger)">Could not send: '+(data.error||'Unknown error')+'</span>';
+      return;
+    }
+    result.innerHTML='<span style="color:var(--success)">✓ Message sent!</span>';
+    document.getElementById('message-text').value='';
+    setTimeout(()=>toggleMessage(),1500);
+  }catch(err){
+    result.innerHTML='<span style="color:var(--danger)">Error: '+err.message+'</span>';
+  }
+}
+
+function showError(title,detail){
+  document.getElementById('content').innerHTML=`
+    <div class="card">
+      <div class="empty-state">
+        <h2>${title}</h2>
+        <p>${detail}</p>
+        <a href="/" class="btn" style="margin-top:20px">Back to Swingable Golf</a>
+      </div>
+    </div>`;
+}
+
+loadBooking();
+</script>
+</body>
+</html>
