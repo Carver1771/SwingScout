@@ -114,6 +114,17 @@ export default async function handler(req, res) {
         break;
       }
 
+      // ─── DIRECT MESSAGE (between coach and student) ───
+      case 'message': {
+        emails.push({
+          to: data.to,
+          subject: data.subject,
+          html: data.html,
+          replyTo: data.replyTo,
+        });
+        break;
+      }
+
       default:
         return res.status(400).json({ error: `Unknown email type: ${type}` });
     }
@@ -143,19 +154,24 @@ export default async function handler(req, res) {
 // ═══════════════════════════════════════════════════════
 // RESEND API CALL
 // ═══════════════════════════════════════════════════════
-async function sendEmail({ to, subject, html }) {
+async function sendEmail({ to, subject, html, replyTo }) {
+  const body = {
+    from: FROM_EMAIL,
+    to: [to],
+    subject,
+    html,
+  };
+  if (replyTo) {
+    body.reply_to = replyTo;
+  }
+
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${RESEND_API_KEY}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      from: FROM_EMAIL,
-      to: [to],
-      subject,
-      html,
-    }),
+    body: JSON.stringify(body),
   });
 
   if (!res.ok) {
@@ -193,6 +209,9 @@ function bookingRequestCoachEmail(d) {
 }
 
 function bookingRequestStudentEmail(d) {
+  const manageLink = d.studentToken
+    ? `https://swingablegolf.com/my-booking.html?token=${d.studentToken}`
+    : 'https://swingablegolf.com';
   return `<div style="${baseStyle}">
     <h2 style="color:#14442b">Request Sent to ${d.coachName}</h2>
     <p>Hi ${d.studentName.split(' ')[0]},</p>
@@ -204,7 +223,8 @@ function bookingRequestStudentEmail(d) {
       <strong>Location:</strong> ${d.location}
     </p>
     <p>You'll get a confirmation email once your coach accepts (usually within 24 hours).</p>
-    <p style="color:#9e9e9e;font-size:12px;margin-top:32px">Swingable Golf · Questions? Reply to this email.</p>
+    <a href="${manageLink}" style="${buttonStyle}">View or cancel booking</a>
+    <p style="color:#9e9e9e;font-size:12px;margin-top:32px">Bookmark the link above to manage your booking anytime.<br>Swingable Golf · Questions? Reply to this email.</p>
   </div>`;
 }
 
