@@ -106,11 +106,17 @@ export default async function handler(req, res) {
       },
     };
 
-    fetch(`${process.env.SITE_URL || 'https://swingablegolf.com'}/api/send-email`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(emailPayload),
-    }).catch(e => console.error('Email send failed:', e));
+    // Send notification emails — MUST await so serverless function
+    // doesn't terminate before the request completes
+    try {
+      await fetch(`${process.env.SITE_URL || 'https://swingablegolf.com'}/api/send-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(emailPayload),
+      });
+    } catch (emailErr) {
+      console.error('Email send failed:', emailErr);
+    }
 
     return res.status(200).json({
       success: true,
