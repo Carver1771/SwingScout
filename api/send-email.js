@@ -6,7 +6,7 @@
 // ═══════════════════════════════════════════════════════
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const FROM_EMAIL = 'Swingable Golf <team@swingablegolf.com>';
+const FROM_EMAIL = 'Swingable Golf <hello@swingablegolf.com>';
 const ADMIN_EMAIL = 'team@swingablegolf.com';
 
 export default async function handler(req, res) {
