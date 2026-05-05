@@ -103,6 +103,7 @@ export default async function handler(req, res) {
         date: dateStr,
         time: booking.booking_time,
         price: `$${booking.price}/hr`,
+        studentToken: booking.student_token,
       },
     };
 
