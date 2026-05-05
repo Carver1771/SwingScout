@@ -93,6 +93,10 @@ export default async function handler(req, res) {
     const platformFeeCents = studentFeeCents + coachFeeCents;
     const coachPayoutCents = totalChargeCents - platformFeeCents;
 
+    // Generate a magic-link token for student booking management
+    // Long random string — no signup needed, the token IS the auth
+    const studentToken = generateToken(40);
+
     // Create the booking record FIRST (status: pending payment auth)
     const { data: booking, error: bookErr } = await supabase
       .from('bookings')
@@ -110,7 +114,8 @@ export default async function handler(req, res) {
         payment_status: 'pending',
         amount_paid: totalChargeCents,
         platform_fee: platformFeeCents,
-        coach_payout: coachPayoutCents
+        coach_payout: coachPayoutCents,
+        student_token: studentToken
       })
       .select()
       .single();
@@ -196,4 +201,23 @@ export default async function handler(req, res) {
       error: 'Something went wrong creating your booking. Please try again.'
     });
   }
+}
+
+// Generate cryptographically random token for magic links
+function generateToken(length) {
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let token = '';
+  // Use crypto.getRandomValues if available (modern Node)
+  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+    const arr = new Uint32Array(length);
+    crypto.getRandomValues(arr);
+    for (let i = 0; i < length; i++) {
+      token += chars[arr[i] % chars.length];
+    }
+  } else {
+    for (let i = 0; i < length; i++) {
+      token += chars[Math.floor(Math.random() * chars.length)];
+    }
+  }
+  return token;
 }
