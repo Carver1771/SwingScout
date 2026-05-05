@@ -465,13 +465,13 @@ function renderProfileTab(){
       </div>`;
     } else {
       stripeCard=`<div class="card" style="background:#d4edda;border-color:#c3e6cb;margin-bottom:20px">
-        <div style="display:flex;align-items:center;gap:14px">
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
           <div style="flex-shrink:0;width:36px;height:36px;border-radius:50%;background:var(--success);display:flex;align-items:center;justify-content:center;color:#fff">✓</div>
-          <div style="flex:1">
+          <div style="flex:1;min-width:200px">
             <div style="font-weight:700;font-size:15px;color:#155724">Payouts active</div>
-            <p style="font-size:13px;color:#155724;opacity:.8;margin-top:2px">Bank account connected. You're ready to receive payments from students.</p>
+            <p style="font-size:13px;color:#155724;opacity:.8;margin-top:2px">Bank account connected. View your earnings and payout history.</p>
           </div>
-          <button class="btn btn-outline" style="width:auto;padding:6px 14px;font-size:12px" onclick="connectStripe()">Manage</button>
+          <button class="btn" style="width:auto;padding:8px 16px;font-size:13px" onclick="openStripeDashboard()">View Earnings</button>
         </div>
       </div>`;
     }
@@ -525,6 +525,11 @@ function renderProfileTab(){
       <div id="custom-loc" style="display:${c.custom_facility_name?'block':'none'}">
         <div class="fl"><label>Facility Name</label><input id="e-facname" value="${(c.custom_facility_name||'').replace(/"/g,'&quot;')}" placeholder="e.g. Brookhaven Country Club"></div>
         <div class="fl"><label>Facility Address</label><input id="e-facaddr" value="${(c.custom_facility_address||'').replace(/"/g,'&quot;')}" placeholder="e.g. 3333 Golfing Green Dr, Dallas, TX 75234"></div>
+      </div>
+      <div class="fl">
+        <label>Lesson Instructions for Students</label>
+        <textarea id="e-instructions" rows="4" placeholder="What students need to know before showing up: where to park, where to meet you, what to bring, dress code, etc.&#10;&#10;Example: Park in the south lot. Meet me at the practice tees behind the pro shop. Bring your own clubs or rent for $15 at the counter.">${getLessonInstructions(c)}</textarea>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px">This will be included in confirmation emails sent to students.</div>
       </div>
       <div class="fl"><label>Short Bio (one line)</label><input id="e-sbio" value="${(c.short_bio||'').replace(/"/g,'&quot;')}" maxlength="120" placeholder="Brief description of your coaching style"></div>
       <div class="fl"><label>Full Bio</label><textarea id="e-fbio" rows="5" placeholder="Tell students about your experience, teaching philosophy, and what they can expect...">${c.full_bio||''}</textarea></div>
@@ -618,6 +623,16 @@ async function saveProfile(){
   const locVal=document.getElementById('e-loc').value;
   const isOther=locVal==='other';
 
+  // Build location_instructions JSONB — keyed by location_id (or 'custom' for other)
+  const locKey=isOther?'custom':(locVal||'none');
+  const instructionsValue=document.getElementById('e-instructions')?.value.trim()||'';
+  const newLocationInstructions={...(coachProfile.location_instructions||{})};
+  if(instructionsValue){
+    newLocationInstructions[locKey]=instructionsValue;
+  } else {
+    delete newLocationInstructions[locKey];
+  }
+
   const updates={
     first_name:document.getElementById('e-first').value.trim(),
     last_name:document.getElementById('e-last').value.trim(),
@@ -631,6 +646,7 @@ async function saveProfile(){
     location_id:isOther?null:locVal||null,
     custom_facility_name:isOther?(document.getElementById('e-facname').value.trim()||null):null,
     custom_facility_address:isOther?(document.getElementById('e-facaddr').value.trim()||null):null,
+    location_instructions:newLocationInstructions,
     short_bio:document.getElementById('e-sbio').value.trim(),
     full_bio:document.getElementById('e-fbio').value.trim(),
     pga_certified:document.getElementById('e-pga').checked,
@@ -651,6 +667,14 @@ async function saveProfile(){
   btn.disabled=false;btn.textContent='Save Changes';
 }
 
+// Get lesson instructions for the coach's current location
+function getLessonInstructions(c){
+  const li=c.location_instructions||{};
+  if(c.location_id&&li[c.location_id])return li[c.location_id];
+  if(c.custom_facility_name&&li.custom)return li.custom;
+  return '';
+}
+
 async function submitForReview(){
   const btn=document.getElementById('submit-btn');
   const msg=document.getElementById('save-msg');
@@ -666,13 +690,19 @@ async function submitForReview(){
 // ══════════════════════════════════════
 // AVAILABILITY TAB
 // ══════════════════════════════════════
+// Track which month is being viewed in the override calendar
+let overrideViewMonth=new Date().getMonth();
+let overrideViewYear=new Date().getFullYear();
+let overrideEditDate=null;
+
 function renderAvailTab(){
   const sched=coachProfile.schedule||{};
   const canEdit=coachProfile.status==='approved'||!coachProfile.profile_submitted;
-  
+
+  // ── Weekly recurring grid ──
   let grid='<div class="avail-grid"><div class="avail-day"></div>';
   DAYS.forEach(d=>{grid+=`<div class="avail-day" style="text-align:center;font-weight:700">${d}</div>`});
-  
+
   TIMES.forEach(t=>{
     grid+=`<div class="avail-time">${t}</div>`;
     DAYS.forEach(d=>{
@@ -684,14 +714,198 @@ function renderAvailTab(){
 
   const totalSlots=Object.values(sched).reduce((a,b)=>a+(b?b.length:0),0);
 
+  // ── Override calendar ──
+  let overrideSection='';
+  if(canEdit){
+    overrideSection=`
+      <div class="card" style="margin-top:16px">
+        <div class="card-title">Date-Specific Adjustments</div>
+        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">Override your weekly schedule for specific days. Click any date to mark it off, or set custom slots for that day only (e.g., afternoon only after a doctor's appointment).</p>
+        ${renderOverrideCalendar()}
+      </div>`;
+  }
+
   return `
     <div class="card">
       <div class="card-title">Weekly Availability</div>
-      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">Click cells to toggle your available time slots. <strong>${totalSlots} slots</strong> currently set.</p>
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">Click cells to toggle your weekly recurring time slots. <strong>${totalSlots} slots</strong> per week.</p>
       ${grid}
-      ${canEdit?`<button class="btn" style="margin-top:20px" onclick="saveAvailability()" id="avail-btn">Save Availability</button>
+      ${canEdit?`<button class="btn" style="margin-top:20px" onclick="saveAvailability()" id="avail-btn">Save Weekly Schedule</button>
       <div id="avail-msg" style="text-align:center;margin-top:12px;font-size:14px"></div>`:''}
+    </div>
+    ${overrideSection}`;
+}
+
+function renderOverrideCalendar(){
+  const overrides=coachProfile.availability_overrides||{};
+  const sched=coachProfile.schedule||{};
+  const today=new Date();today.setHours(0,0,0,0);
+  const maxDate=new Date(today);maxDate.setDate(maxDate.getDate()+180);
+
+  const monthName=MNAMES[overrideViewMonth];
+  const firstDay=new Date(overrideViewYear,overrideViewMonth,1);
+  const daysInMonth=new Date(overrideViewYear,overrideViewMonth+1,0).getDate();
+  const startWeekday=firstDay.getDay();
+  const dowOrder=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+  // Calendar header
+  let cal=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <button onclick="navOverrideMonth(-1)" style="padding:6px 12px;background:var(--surface);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-family:inherit">← Prev</button>
+      <div style="font-weight:700;font-size:15px">${monthName} ${overrideViewYear}</div>
+      <button onclick="navOverrideMonth(1)" style="padding:6px 12px;background:var(--surface);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-family:inherit">Next →</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:8px">
+      ${['S','M','T','W','T','F','S'].map(d=>`<div style="text-align:center;font-size:11px;font-weight:700;color:var(--text-muted);padding:4px">${d}</div>`).join('')}
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">`;
+
+  // Empty cells before month start
+  for(let i=0;i<startWeekday;i++){cal+=`<div></div>`}
+
+  for(let day=1;day<=daysInMonth;day++){
+    const dt=new Date(overrideViewYear,overrideViewMonth,day);
+    const dbDate=overrideViewYear+'-'+String(overrideViewMonth+1).padStart(2,'0')+'-'+String(day).padStart(2,'0');
+    const isPast=dt<today;
+    const isBeyondHorizon=dt>maxDate;
+    const dow=dowOrder[dt.getDay()];
+    const recurringSlots=sched[dow]||[];
+    const hasRecurring=recurringSlots.length>0;
+
+    // Override status
+    const override=overrides[dbDate];
+    const hasOverride=override!==undefined;
+    const isOff=hasOverride&&override.length===0;
+    const hasCustomSlots=hasOverride&&override.length>0;
+
+    let bg='transparent',color='var(--text)',border='1px solid transparent';
+    let title='';
+    let clickable=!isPast&&!isBeyondHorizon;
+
+    if(isPast){
+      bg='var(--surface)';color='var(--text-muted)';
+    } else if(isBeyondHorizon){
+      bg='var(--surface)';color='var(--text-muted)';
+      title='Beyond 180-day booking window';
+    } else if(isOff){
+      bg='#fee2e2';color='#991b1b';border='1px solid #fca5a5';
+      title='Marked as day off';
+    } else if(hasCustomSlots){
+      bg='var(--gold-light)';color='var(--brand-dark)';border='1px solid var(--gold)';
+      title=override.length+' custom slot(s): '+override.join(', ');
+    } else if(hasRecurring){
+      bg='var(--brand-lighter)';color='var(--brand-dark)';
+      title=recurringSlots.length+' recurring slot(s)';
+    } else {
+      color='var(--text-muted)';
+      title='No availability';
+    }
+
+    cal+=`<div ${clickable?`onclick="openOverrideEditor('${dbDate}')"`:''} style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;background:${bg};color:${color};border-radius:6px;font-size:13px;font-weight:600;${clickable?'cursor:pointer':'cursor:default'};${border}" title="${title}">${day}</div>`;
+  }
+  cal+=`</div>
+    <div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:14px;font-size:12px;color:var(--text-secondary)">
+      <div style="display:flex;align-items:center;gap:5px"><div style="width:14px;height:14px;background:var(--brand-lighter);border-radius:3px"></div>Recurring slots</div>
+      <div style="display:flex;align-items:center;gap:5px"><div style="width:14px;height:14px;background:var(--gold-light);border:1px solid var(--gold);border-radius:3px"></div>Custom slots</div>
+      <div style="display:flex;align-items:center;gap:5px"><div style="width:14px;height:14px;background:#fee2e2;border:1px solid #fca5a5;border-radius:3px"></div>Day off</div>
     </div>`;
+
+  return cal;
+}
+
+function navOverrideMonth(delta){
+  overrideViewMonth+=delta;
+  if(overrideViewMonth<0){overrideViewMonth=11;overrideViewYear--}
+  if(overrideViewMonth>11){overrideViewMonth=0;overrideViewYear++}
+  // Don't navigate before today's month
+  const todayMonth=new Date().getMonth(),todayYear=new Date().getFullYear();
+  if(overrideViewYear<todayYear||(overrideViewYear===todayYear&&overrideViewMonth<todayMonth)){
+    overrideViewMonth=todayMonth;overrideViewYear=todayYear;
+  }
+  document.getElementById('tab-content').innerHTML=renderAvailTab();
+}
+
+function openOverrideEditor(dbDate){
+  overrideEditDate=dbDate;
+  const overrides=coachProfile.availability_overrides||{};
+  const sched=coachProfile.schedule||{};
+  const dt=new Date(dbDate+'T12:00:00');
+  const dow=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][dt.getDay()];
+  const recurringSlots=sched[dow]||[];
+  const dateLabel=dt.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+
+  // Determine current state for this date
+  const override=overrides[dbDate];
+  let currentSlots;
+  if(override===undefined){
+    currentSlots=[...recurringSlots]; // copy of recurring
+  } else {
+    currentSlots=[...override];
+  }
+
+  const slotsHTML=TIMES.map(t=>{
+    const active=currentSlots.includes(t);
+    return `<div class="avail-cell ${active?'active':''}" style="cursor:pointer;padding:8px 4px" onclick="toggleOverrideSlot('${t}',this)" data-time="${t}">${active?t+' \u2713':t}</div>`;
+  }).join('');
+
+  const modal=document.createElement('div');
+  modal.id='override-modal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px';
+  modal.onclick=e=>{if(e.target===modal)modal.remove()};
+  modal.innerHTML=`
+    <div style="background:#fff;border-radius:14px;max-width:480px;width:100%;max-height:85vh;overflow:auto;padding:24px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <h2 style="font-family:'Libre Baskerville',serif;font-size:18px;margin:0">${dateLabel}</h2>
+        <button onclick="document.getElementById('override-modal').remove()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--text-muted)">×</button>
+      </div>
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">Recurring schedule for ${dow}: ${recurringSlots.length?recurringSlots.join(', '):'none'}</p>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:18px">${slotsHTML}</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-outline" style="flex:1;min-width:120px" onclick="saveOverride('off')">Mark as Day Off</button>
+        <button class="btn btn-outline" style="flex:1;min-width:120px" onclick="saveOverride('reset')">Use Recurring</button>
+        <button class="btn" style="flex:1;min-width:120px" onclick="saveOverride('custom')">Save Custom Slots</button>
+      </div>
+      <div id="override-msg" style="text-align:center;margin-top:12px;font-size:13px"></div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+function toggleOverrideSlot(time,el){
+  el.classList.toggle('active');
+  el.textContent=el.classList.contains('active')?time+' ✓':time;
+}
+
+async function saveOverride(action){
+  const dbDate=overrideEditDate;
+  const overrides=coachProfile.availability_overrides||{};
+
+  if(action==='off'){
+    overrides[dbDate]=[];
+  } else if(action==='reset'){
+    delete overrides[dbDate];
+  } else {
+    // Custom: read selected slots from modal
+    const cells=document.querySelectorAll('#override-modal .avail-cell.active');
+    const slots=Array.from(cells).map(c=>c.dataset.time).sort((a,b)=>TIMES.indexOf(a)-TIMES.indexOf(b));
+    overrides[dbDate]=slots;
+  }
+
+  const msg=document.getElementById('override-msg');
+  msg.innerHTML='Saving...';
+
+  const {error}=await sb.from('coaches').update({
+    availability_overrides:overrides,
+    updated_at:new Date().toISOString()
+  }).eq('id',coachProfile.id);
+
+  if(error){
+    msg.innerHTML='<span style="color:var(--danger)">Error: '+error.message+'</span>';
+    return;
+  }
+
+  coachProfile.availability_overrides=overrides;
+  document.getElementById('override-modal').remove();
+  document.getElementById('tab-content').innerHTML=renderAvailTab();
 }
 
 function toggleAvail(day,time){
@@ -770,6 +984,57 @@ function renderBookingsTab(){
     }
   });
 
+  // ── Calculate earnings stats ──
+  const now=new Date();
+  const weekStart=new Date(now);
+  weekStart.setDate(now.getDate()-now.getDay()); // Sunday
+  weekStart.setHours(0,0,0,0);
+  const monthStart=new Date(now.getFullYear(),now.getMonth(),1);
+
+  let earnedThisWeek=0,earnedThisMonth=0,earnedAllTime=0;
+  let lessonsThisWeek=0,lessonsThisMonth=0;
+
+  coachBookings.forEach(b=>{
+    if(b.payment_status!=='paid'&&b.payment_status!=='refunded')return;
+    if(b.payment_status==='refunded')return; // refunds = $0 earned
+    const dt=new Date(b.booking_date+'T12:00:00');
+    const payoutDollars=(b.coach_payout||0)/100;
+    earnedAllTime+=payoutDollars;
+    if(dt>=monthStart){
+      earnedThisMonth+=payoutDollars;
+      lessonsThisMonth++;
+    }
+    if(dt>=weekStart){
+      earnedThisWeek+=payoutDollars;
+      lessonsThisWeek++;
+    }
+  });
+
+  const fmtMoney=n=>'$'+n.toFixed(2);
+  const statsWidget=`
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px">
+      <div style="background:var(--brand);color:#fff;border-radius:12px;padding:14px 18px">
+        <div style="font-size:12px;opacity:.85;font-weight:600;text-transform:uppercase;letter-spacing:.5px">This Week</div>
+        <div style="font-size:22px;font-weight:700;margin-top:4px">${fmtMoney(earnedThisWeek)}</div>
+        <div style="font-size:12px;opacity:.85;margin-top:2px">${lessonsThisWeek} lesson${lessonsThisWeek===1?'':'s'}</div>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--border-light);border-radius:12px;padding:14px 18px">
+        <div style="font-size:12px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px">This Month</div>
+        <div style="font-size:22px;font-weight:700;margin-top:4px;color:var(--text)">${fmtMoney(earnedThisMonth)}</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px">${lessonsThisMonth} lesson${lessonsThisMonth===1?'':'s'}</div>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--border-light);border-radius:12px;padding:14px 18px">
+        <div style="font-size:12px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px">Lifetime</div>
+        <div style="font-size:22px;font-weight:700;margin-top:4px;color:var(--text)">${fmtMoney(earnedAllTime)}</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px">All time</div>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--border-light);border-radius:12px;padding:14px 18px">
+        <div style="font-size:12px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px">Pending</div>
+        <div style="font-size:22px;font-weight:700;margin-top:4px;color:${pending.length>0?'var(--gold)':'var(--text)'}">${pending.length}</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Need response</div>
+      </div>
+    </div>`;
+
   // Sort: pending by date ascending, upcoming by date ascending, past by date descending
   pending.sort((a,b)=>a.booking_date.localeCompare(b.booking_date));
   upcoming.sort((a,b)=>a.booking_date.localeCompare(b.booking_date));
@@ -835,6 +1100,7 @@ function renderBookingsTab(){
   `;
 
   return `
+    ${statsWidget}
     <div class="card">
       ${subTabs}
       ${items}
@@ -931,10 +1197,40 @@ async function connectStripe(){
   }
 }
 
+async function openStripeDashboard(){
+  const btn=event?.target;
+  if(btn){btn.disabled=true;btn.textContent='Opening...'}
+
+  try{
+    const res=await fetch('/api/coach-dashboard-link',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({coachId:coachProfile.id})
+    });
+    const data=await res.json();
+
+    if(data.url){
+      // Open in new tab so user doesn't lose their place
+      window.open(data.url,'_blank');
+    } else {
+      throw new Error(data.error||'Could not open dashboard');
+    }
+  } catch(err){
+    alert('Error: '+err.message);
+  } finally {
+    if(btn){btn.disabled=false;btn.textContent='View Earnings'}
+  }
+}
+
 // ══════════════════════════════════════
 // INIT
 // ══════════════════════════════════════
 init();
 </script>
+
+<footer style="margin-top:60px;padding:24px 20px;text-align:center;font-size:12px;color:var(--text-muted);border-top:1px solid var(--border-light)">
+  <div style="margin-bottom:6px"><a href="/policies.html" style="color:var(--text-muted);text-decoration:none;margin:0 8px">Policies</a> · <a href="mailto:team@swingablegolf.com" style="color:var(--text-muted);text-decoration:none;margin:0 8px">Contact Support</a></div>
+  <div>© 2026 Swingable Golf LLC</div>
+</footer>
 </body>
 </html>
