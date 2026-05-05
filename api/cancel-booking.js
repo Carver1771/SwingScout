@@ -146,10 +146,14 @@ export default async function handler(req, res) {
       if (shouldRefund) {
         const refund = await stripe.refunds.create({
           payment_intent: paymentIntentId,
-          reason: reason || 'requested_by_customer',
+          reason: 'requested_by_customer', // Stripe only accepts: duplicate, fraudulent, requested_by_customer
           reverse_transfer: true,
           refund_application_fee: true,
-          metadata: { booking_id: bookingId },
+          metadata: {
+            booking_id: bookingId,
+            cancelled_by: cancellerType,
+            internal_reason: reason || 'cancellation',
+          },
         });
         action = 'refunded';
         refunded = true;
