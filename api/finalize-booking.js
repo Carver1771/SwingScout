@@ -104,6 +104,7 @@ export default async function handler(req, res) {
         time: booking.booking_time,
         price: `$${booking.price}/hr`,
         studentToken: booking.student_token,
+        lessonInstructions: getLessonInstructions(booking),
       },
     };
 
@@ -131,4 +132,28 @@ export default async function handler(req, res) {
       error: err.message || 'Could not finalize booking'
     });
   }
+}
+
+// Compute combined lesson instructions: location default + coach-specific override
+function getLessonInstructions(booking) {
+  const coach = booking.coaches || {};
+  const location = booking.locations;
+  const coachInstructions = coach.location_instructions || {};
+
+  // Coach's note for this specific location (or 'custom' for non-listed venues)
+  let coachNote = '';
+  if (booking.location_id && coachInstructions[booking.location_id]) {
+    coachNote = coachInstructions[booking.location_id];
+  } else if (!booking.location_id && coachInstructions.custom) {
+    coachNote = coachInstructions.custom;
+  }
+
+  // Location default (admin-set)
+  const locationDefault = location?.default_instructions || '';
+
+  // Combine: location default first, then coach's specific note
+  const parts = [];
+  if (locationDefault) parts.push(locationDefault);
+  if (coachNote) parts.push(coachNote);
+  return parts.join('\n\n');
 }
