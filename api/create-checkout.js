@@ -61,6 +61,30 @@ export default async function handler(req, res) {
       });
     }
 
+    // ─── DOUBLE-BOOKING PROTECTION ───
+    // Check if this exact date+time slot is already taken by another booking
+    // that hasn't been cancelled or refunded. Prevents two students from
+    // booking the same slot via race condition.
+    const { data: existingBookings } = await supabase
+      .from('bookings')
+      .select('id, status, payment_status')
+      .eq('coach_id', coachId)
+      .eq('booking_date', bookingDate)
+      .eq('booking_time', bookingTime)
+      .neq('status', 'cancelled');
+
+    const conflict = (existingBookings || []).find(b =>
+      b.payment_status !== 'refunded' &&
+      b.payment_status !== 'failed' &&
+      b.payment_status !== 'cancelled'
+    );
+
+    if (conflict) {
+      return res.status(409).json({
+        error: 'This time slot was just booked by someone else. Please pick a different time.'
+      });
+    }
+
     // Calculate fees (in cents — Stripe uses smallest currency unit)
     const coachPriceCents = Math.round(coach.price * 100);
     const studentFeeCents = Math.round(coachPriceCents * STUDENT_FEE_PCT);
