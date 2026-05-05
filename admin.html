@@ -383,16 +383,64 @@ function renderLocations(){
     </div>
 
     <div class="table-wrap"><table>
-      <thead><tr><th>Name</th><th>City</th><th>Coaches</th><th>ID</th></tr></thead>
+      <thead><tr><th>Name</th><th>City</th><th>Coaches</th><th>Default Instructions</th><th>ID</th></tr></thead>
       <tbody>${locations.map(l=>{
         const count=coaches.filter(c=>c.location_id===l.id).length;
+        const hasInstructions=l.default_instructions&&l.default_instructions.trim();
+        const preview=hasInstructions?(l.default_instructions.length>40?l.default_instructions.slice(0,40)+'...':l.default_instructions):'<span style="color:var(--text-muted);font-style:italic">Not set</span>';
         return `<tr>
           <td class="coach-name">${l.name}</td>
           <td>${l.city}</td>
           <td>${count||'—'}</td>
+          <td style="font-size:13px">${preview} <button onclick="editLocationInstructions('${l.id}')" style="margin-left:8px;padding:3px 10px;background:var(--surface);border:1px solid var(--border);border-radius:4px;font-size:11px;cursor:pointer;font-family:inherit">Edit</button></td>
           <td><span class="coach-email">${l.id}</span></td>
         </tr>`}).join('')}</tbody>
     </table></div>`;
+}
+
+function editLocationInstructions(locationId){
+  const loc=locations.find(l=>l.id===locationId);
+  if(!loc)return;
+  const current=loc.default_instructions||'';
+
+  const modal=document.createElement('div');
+  modal.id='loc-instr-modal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px';
+  modal.onclick=e=>{if(e.target===modal)modal.remove()};
+  modal.innerHTML=`
+    <div style="background:#fff;border-radius:14px;max-width:540px;width:100%;padding:24px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <h2 style="font-family:'Libre Baskerville',serif;font-size:18px;margin:0">Default Instructions: ${loc.name}</h2>
+        <button onclick="document.getElementById('loc-instr-modal').remove()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--text-muted)">×</button>
+      </div>
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:14px">These default instructions will be sent to all students booking lessons at this location, in addition to any coach-specific notes.</p>
+      <textarea id="loc-instr-text" rows="6" placeholder="e.g. Park in the visitor lot near the clubhouse. Check in at the pro shop counter before your lesson. Dress code: collared shirt required." style="width:100%;padding:12px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px;resize:vertical">${current.replace(/</g,'&lt;')}</textarea>
+      <div style="display:flex;gap:8px;margin-top:16px">
+        <button class="btn btn-outline" style="flex:1" onclick="document.getElementById('loc-instr-modal').remove()">Cancel</button>
+        <button class="btn" style="flex:1" onclick="saveLocationInstructions('${locationId}')">Save</button>
+      </div>
+      <div id="loc-instr-msg" style="text-align:center;margin-top:12px;font-size:13px"></div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+async function saveLocationInstructions(locationId){
+  const text=document.getElementById('loc-instr-text').value.trim();
+  const msg=document.getElementById('loc-instr-msg');
+  msg.innerHTML='Saving...';
+
+  const {error}=await sb.from('locations').update({default_instructions:text||null}).eq('id',locationId);
+  if(error){
+    msg.innerHTML='<span style="color:var(--danger)">Error: '+error.message+'</span>';
+    return;
+  }
+
+  // Update local state
+  const loc=locations.find(l=>l.id===locationId);
+  if(loc)loc.default_instructions=text||null;
+
+  document.getElementById('loc-instr-modal').remove();
+  renderDashboard();
 }
 
 async function addLocation(){
@@ -490,5 +538,9 @@ async function rejectCoach(id){
 // ══════════════════════════════════════
 init();
 </script>
+
+<footer style="margin-top:60px;padding:24px 20px;text-align:center;font-size:12px;color:var(--text-muted);border-top:1px solid var(--border-light)">
+  <div><a href="/policies.html" style="color:var(--text-muted);text-decoration:none">Policies</a> · Admin Console · © 2026 Swingable Golf LLC</div>
+</footer>
 </body>
 </html>
