@@ -77,22 +77,33 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:#fafaf8;color:#1a1a1a
 }
 
 /* ═══ HEADLINE BANNER ═══ */
-.hero{background:linear-gradient(180deg,var(--bg) 0%,#fff 100%);padding:36px 24px 32px;text-align:center;position:relative;overflow:hidden;border-bottom:1px solid var(--border-light)}
-.hero-deco{width:36px;height:1px;background:var(--gold);margin:0 auto 12px}
-.hero-eyebrow{font-size:10px;font-weight:600;letter-spacing:2.2px;text-transform:uppercase;color:var(--gold);margin-bottom:10px}
-.hero h1{font-family:'Libre Baskerville',serif;font-size:30px;line-height:1.2;font-weight:700;color:var(--text);letter-spacing:-0.4px;max-width:680px;margin:0 auto}
+.hero{background:linear-gradient(180deg,var(--bg) 0%,#fff 100%);padding:18px 24px;border-bottom:1px solid var(--border-light);text-align:center}
+.hero-row{max-width:1400px;margin:0 auto;display:flex;align-items:center;justify-content:center;gap:24px;flex-wrap:wrap}
+.hero-left{display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center}
+.hero-eyebrow{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gold);white-space:nowrap;display:flex;align-items:center;gap:8px;flex-shrink:0}
+.hero-eyebrow::before{content:'';display:inline-block;width:18px;height:1px;background:var(--gold)}
+.hero-eyebrow::after{content:'';display:inline-block;width:18px;height:1px;background:var(--gold)}
+.hero h1{font-family:'Libre Baskerville',serif;font-size:20px;line-height:1.2;font-weight:700;color:var(--text);letter-spacing:-0.2px;margin:0}
 .hero h1 span{color:var(--brand);font-style:italic}
-.hero-subhead{font-size:14px;line-height:1.5;color:var(--text-secondary);max-width:520px;margin:12px auto 0}
-.hero-pills{display:flex;justify-content:center;gap:22px;margin-top:18px;font-size:12px;color:var(--text-muted);flex-wrap:wrap}
-.hero-pill{display:flex;align-items:center;gap:6px;font-weight:500}
-.hero-pill svg{flex-shrink:0;color:var(--brand);width:12px;height:12px}
-@media(max-width:768px){
-  .hero{padding:28px 18px 24px}
-  .hero-deco{margin-bottom:10px;width:28px}
-  .hero-eyebrow{font-size:9px;letter-spacing:1.8px;margin-bottom:8px}
-  .hero h1{font-size:22px;letter-spacing:-0.2px}
-  .hero-subhead{font-size:13px;margin-top:10px;max-width:400px}
-  .hero-pills{gap:14px;font-size:11px;margin-top:14px}
+
+.hero-stats{display:flex;align-items:center;gap:22px;flex-shrink:0}
+.hero-stat{display:flex;align-items:baseline;gap:6px;font-size:13px;color:var(--text-secondary);white-space:nowrap}
+.hero-stat-num{font-family:'Libre Baskerville',serif;font-size:16px;font-weight:700;color:var(--brand);line-height:1}
+.hero-stat-divider{width:1px;height:14px;background:var(--border)}
+
+@media(max-width:900px){
+  .hero{padding:14px 18px}
+  .hero-row{gap:12px}
+  .hero h1{font-size:17px}
+  .hero-stats{gap:14px;font-size:12px}
+  .hero-stat-num{font-size:14px}
+}
+@media(max-width:640px){
+  .hero-eyebrow{display:none}
+  .hero h1{font-size:16px}
+  .hero-stats{justify-content:center;gap:10px}
+  .hero-stat{font-size:11px}
+  .hero-stat-divider{display:none}
 }
 
 /* ═══ MAP HINT ═══ */
@@ -312,11 +323,13 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:#fafaf8;color:#1a1a1a
 .pp-i .info .r{font-size:11px;color:var(--amber)}
 .pp-btn{font-size:11px;font-weight:600;padding:5px 10px;background:var(--brand-lighter);color:var(--brand);border:none;border-radius:5px;cursor:pointer;white-space:nowrap;transition:background .15s}
 .pp-btn:hover{background:#d0e8d6}
-.pin{width:32px;height:32px;border-radius:50%;background:var(--brand);border:3px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .15s}
-.pin:hover{transform:scale(1.2)}
-.pin svg{width:14px;height:14px}
-.pin-multi{width:auto;min-width:36px;height:30px;border-radius:15px;padding:0 10px;gap:4px}
-.pin-multi .pin-count{font-family:'DM Sans',system-ui,sans-serif;font-size:12px;font-weight:700;color:#fff;line-height:1}
+.pin{width:34px;height:42px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .15s;filter:drop-shadow(0 2px 6px rgba(0,0,0,.35))}
+.pin:hover{transform:scale(1.15) translateY(-2px)}
+.pin img{width:100%;height:100%;object-fit:contain;display:block;pointer-events:none}
+.pin-multi{width:auto;min-width:44px;height:34px;background:var(--brand);border:2.5px solid #fff;border-radius:18px;padding:0 10px 0 6px;gap:4px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(0,0,0,.3);filter:none}
+.pin-multi:hover{transform:scale(1.1)}
+.pin-multi img{width:18px;height:22px;flex-shrink:0}
+.pin-multi .pin-count{font-family:'DM Sans',system-ui,sans-serif;font-size:13px;font-weight:700;color:#fff;line-height:1}
 
 /* ═══ GROWING BANNER ═══ */
 .growing-banner{display:flex;align-items:center;gap:8px;padding:10px 20px;background:var(--gold-light);border-bottom:1px solid #efe4c3;font-size:12px;color:#8a6d1b;position:relative}
@@ -467,14 +480,18 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:#fafaf8;color:#1a1a1a
 </div></header>
 
 <section class="hero">
-  <div class="hero-deco"></div>
-  <div class="hero-eyebrow">Dallas / Fort Worth</div>
-  <h1>Find a <span>golf coach</span> built for your game.</h1>
-  <p class="hero-subhead">A curated network of certified instructors. Browse profiles, check real-time availability, and book your next lesson in minutes.</p>
-  <div class="hero-pills">
-    <div class="hero-pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg>PGA-trained pros</div>
-    <div class="hero-pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg>Vetted profiles</div>
-    <div class="hero-pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg>Secure booking &amp; refunds</div>
+  <div class="hero-row">
+    <div class="hero-left">
+      <div class="hero-eyebrow">Dallas / Fort Worth</div>
+      <h1>Find a <span>golf coach</span> built for your game.</h1>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat"><span class="hero-stat-num" id="stat-venues">70+</span>venues</div>
+      <div class="hero-stat-divider"></div>
+      <div class="hero-stat"><span class="hero-stat-num">4.9★</span>avg rating</div>
+      <div class="hero-stat-divider"></div>
+      <div class="hero-stat"><span class="hero-stat-num">100%</span>refund protection</div>
+    </div>
   </div>
 </section>
 
@@ -620,10 +637,10 @@ locations.forEach(loc=>{
   const count=gI(loc.id).length;
   if(count===0) return;
   let pinHTML;
-  if(count===1){pinHTML=`<div class="pin"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><circle cx="12" cy="12" r="3"/></svg></div>`}
-  else{pinHTML=`<div class="pin pin-multi"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" width="12" height="12"><circle cx="12" cy="12" r="3"/></svg><span class="pin-count">${count}</span></div>`}
+  if(count===1){pinHTML=`<div class="pin"><img src="/logo-icon.svg" alt=""></div>`}
+  else{pinHTML=`<div class="pin-multi"><img src="/logo-icon.svg" alt=""><span class="pin-count">${count}</span></div>`}
   const isMulti=count>1;
-  const icon=L.divIcon({className:'',html:pinHTML,iconSize:isMulti?[46,30]:[32,32],iconAnchor:isMulti?[23,15]:[16,16],popupAnchor:[0,isMulti?-18:-18]});
+  const icon=L.divIcon({className:'',html:pinHTML,iconSize:isMulti?[54,34]:[34,42],iconAnchor:isMulti?[27,17]:[17,42],popupAnchor:[0,isMulti?-18:-40]});
   const m=L.marker([loc.lat,loc.lng],{icon}).addTo(map);
   m.on('click',()=>openPop(loc.id));
   m.on('mouseover',()=>{gI(loc.id).forEach(inst=>{const el=document.getElementById('card-'+inst.id);if(el){el.classList.add('pin-highlight');el.scrollIntoView({block:'nearest',behavior:'smooth'})}})});
@@ -1171,6 +1188,10 @@ async function loadData(){
 
     // Render everything
     renderAll();
+
+    // Update hero stats with real data
+    const sv=document.getElementById('stat-venues');
+    if(sv)sv.textContent=locations.length+'+';
 
     console.log('Swingable Golf: Loaded '+instructors.length+' coaches from '+locations.length+' locations');
   }catch(err){
