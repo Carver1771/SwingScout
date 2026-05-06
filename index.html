@@ -323,12 +323,11 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:#fafaf8;color:#1a1a1a
 .pp-i .info .r{font-size:11px;color:var(--amber)}
 .pp-btn{font-size:11px;font-weight:600;padding:5px 10px;background:var(--brand-lighter);color:var(--brand);border:none;border-radius:5px;cursor:pointer;white-space:nowrap;transition:background .15s}
 .pp-btn:hover{background:#d0e8d6}
-.pin{width:34px;height:42px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .15s;filter:drop-shadow(0 2px 6px rgba(0,0,0,.35))}
+.pin{width:34px;height:42px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .15s;filter:drop-shadow(0 3px 6px rgba(0,0,0,.4))}
 .pin:hover{transform:scale(1.15) translateY(-2px)}
-.pin img{width:100%;height:100%;object-fit:contain;display:block;pointer-events:none}
-.pin-multi{width:auto;min-width:44px;height:34px;background:var(--brand);border:2.5px solid #fff;border-radius:18px;padding:0 10px 0 6px;gap:4px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(0,0,0,.3);filter:none}
+.pin svg{width:100%;height:100%;display:block;pointer-events:none}
+.pin-multi{width:auto;min-width:44px;height:34px;background:var(--brand);border:2.5px solid #fff;border-radius:18px;padding:0 12px;gap:5px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(0,0,0,.3);filter:none}
 .pin-multi:hover{transform:scale(1.1)}
-.pin-multi img{width:18px;height:22px;flex-shrink:0}
 .pin-multi .pin-count{font-family:'DM Sans',system-ui,sans-serif;font-size:13px;font-weight:700;color:#fff;line-height:1}
 
 /* ═══ GROWING BANNER ═══ */
@@ -637,8 +636,8 @@ locations.forEach(loc=>{
   const count=gI(loc.id).length;
   if(count===0) return;
   let pinHTML;
-  if(count===1){pinHTML=`<div class="pin"><img src="/logo-icon.svg" alt=""></div>`}
-  else{pinHTML=`<div class="pin-multi"><img src="/logo-icon.svg" alt=""><span class="pin-count">${count}</span></div>`}
+  if(count===1){pinHTML=`<div class="pin"><svg viewBox="0 0 32 40" xmlns="http://www.w3.org/2000/svg"><path d="M16 2 C8.27 2 2 8.27 2 16 C2 26.5 16 38 16 38 S30 26.5 30 16 C30 8.27 23.73 2 16 2 Z" fill="#1b5e3b" stroke="#fff" stroke-width="2.2"/><circle cx="16" cy="15" r="4.5" fill="#D4B685"/></svg></div>`}
+  else{pinHTML=`<div class="pin-multi"><span class="pin-count">${count}</span></div>`}
   const isMulti=count>1;
   const icon=L.divIcon({className:'',html:pinHTML,iconSize:isMulti?[54,34]:[34,42],iconAnchor:isMulti?[27,17]:[17,42],popupAnchor:[0,isMulti?-18:-40]});
   const m=L.marker([loc.lat,loc.lng],{icon}).addTo(map);
