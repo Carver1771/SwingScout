@@ -25,11 +25,27 @@ export default async function handler(req, res) {
   try {
     const { bookingId, studentToken, senderType, message } = req.body;
 
+    // ─── INPUT VALIDATION ───
     if (!bookingId || !senderType || !message) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    if (message.length > 2000) {
+    // Type checks
+    if (typeof message !== 'string' || typeof senderType !== 'string') {
+      return res.status(400).json({ error: 'Invalid field types' });
+    }
+
+    // Sender type must be one of the two allowed values
+    if (senderType !== 'student' && senderType !== 'coach') {
+      return res.status(400).json({ error: 'Invalid sender type' });
+    }
+
+    // Message length: non-empty after trim, capped at 2000
+    const trimmedMessage = message.trim();
+    if (trimmedMessage.length < 1) {
+      return res.status(400).json({ error: 'Message cannot be empty' });
+    }
+    if (trimmedMessage.length > 2000) {
       return res.status(400).json({ error: 'Message too long (2000 char max)' });
     }
 
@@ -44,9 +60,14 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: 'Booking not found' });
     }
 
+    // Verify booking has a coach record (data integrity)
+    if (!booking.coaches || !booking.coaches.email) {
+      return res.status(500).json({ error: 'Booking is missing coach record' });
+    }
+
     // Verify student authentication via token
     if (senderType === 'student') {
-      if (!studentToken || booking.student_token !== studentToken) {
+      if (!studentToken || typeof studentToken !== 'string' || booking.student_token !== studentToken) {
         return res.status(403).json({ error: 'Invalid token' });
       }
     }
@@ -70,7 +91,7 @@ export default async function handler(req, res) {
 
     const subject = `Message from ${fromName} (Swingable Golf lesson ${dateStr})`;
     const html = messageEmailTemplate({
-      fromName, toName, message, dateStr, time: booking.booking_time,
+      fromName, toName, message: trimmedMessage, dateStr, time: booking.booking_time,
       replyToEmail: fromEmail, counterpartLabel
     });
 
