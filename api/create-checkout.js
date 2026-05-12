@@ -39,9 +39,66 @@ export default async function handler(req, res) {
       locationId
     } = req.body;
 
-    // Validate required fields
+    // ─── INPUT VALIDATION ───
+    // Check required fields are present
     if (!coachId || !studentName || !studentEmail || !bookingDate || !bookingTime) {
       return res.status(400).json({ error: 'Missing required booking fields' });
+    }
+
+    // Type checks — reject objects/arrays sent in string fields
+    if (typeof studentName !== 'string' || typeof studentEmail !== 'string' ||
+        typeof bookingDate !== 'string' || typeof bookingTime !== 'string') {
+      return res.status(400).json({ error: 'Invalid field types' });
+    }
+
+    // Length limits — prevent abuse / malformed data
+    const trimmedName = studentName.trim();
+    const trimmedEmail = studentEmail.trim();
+    if (trimmedName.length < 1 || trimmedName.length > 100) {
+      return res.status(400).json({ error: 'Name must be 1–100 characters' });
+    }
+    if (trimmedEmail.length > 200) {
+      return res.status(400).json({ error: 'Email too long' });
+    }
+    if (studentPhone && (typeof studentPhone !== 'string' || studentPhone.length > 30)) {
+      return res.status(400).json({ error: 'Invalid phone number' });
+    }
+
+    // Email format — basic shape check (not RFC-perfect, just sanity)
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      return res.status(400).json({ error: 'Invalid email address' });
+    }
+
+    // Date format — must be YYYY-MM-DD
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(bookingDate)) {
+      return res.status(400).json({ error: 'Invalid date format' });
+    }
+    const requestedDate = new Date(bookingDate + 'T12:00:00');
+    if (isNaN(requestedDate.getTime())) {
+      return res.status(400).json({ error: 'Invalid date' });
+    }
+
+    // Date must be today or future, within 180 days
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const maxDate = new Date(today);
+    maxDate.setDate(maxDate.getDate() + 180);
+    if (requestedDate < today) {
+      return res.status(400).json({ error: 'Booking date cannot be in the past' });
+    }
+    if (requestedDate > maxDate) {
+      return res.status(400).json({ error: 'Booking date too far in the future (max 180 days)' });
+    }
+
+    // Time format — must be "H:MM AM/PM" (e.g. "9:00 AM", "12:30 PM")
+    if (!/^([1-9]|1[0-2]):[0-5][0-9]\s?(AM|PM)$/i.test(bookingTime)) {
+      return res.status(400).json({ error: 'Invalid time format' });
+    }
+
+    // Skill level — must be one of the allowed values (or empty/missing)
+    const allowedSkillLevels = ['Beginner', 'Intermediate', 'Advanced'];
+    if (skillLevel && !allowedSkillLevels.includes(skillLevel)) {
+      return res.status(400).json({ error: 'Invalid skill level' });
     }
 
     // Fetch coach details
@@ -59,6 +116,34 @@ export default async function handler(req, res) {
       return res.status(400).json({
         error: 'This coach has not set up payouts yet. Please try a different coach.'
       });
+    }
+
+    // ─── COACH AVAILABILITY CHECK ───
+    // Verify the requested date+time matches the coach's published availability.
+    // Frontend already filters to valid slots, but a direct API call could bypass that.
+    // Layer 1: date-specific override (if present, it overrides the weekly template)
+    // Layer 2: weekly recurring schedule
+    const overrides = coach.availability_overrides || {};
+    let availableTimes;
+    if (Object.prototype.hasOwnProperty.call(overrides, bookingDate)) {
+      // Override exists for this date — use it (empty array = day off)
+      availableTimes = overrides[bookingDate];
+    } else {
+      // No override — fall back to weekly template
+      const dayName = requestedDate.toLocaleDateString('en-US', { weekday: 'short' });
+      const schedule = coach.schedule || {};
+      availableTimes = schedule[dayName] || [];
+    }
+
+    if (!Array.isArray(availableTimes) || !availableTimes.includes(bookingTime)) {
+      return res.status(400).json({
+        error: 'This time is not available. Please choose a different time.'
+      });
+    }
+
+    // Sanity check coach price (data integrity — guards against bad/missing data)
+    if (typeof coach.price !== 'number' || coach.price <= 0 || coach.price > 10000) {
+      return res.status(400).json({ error: 'Coach price is invalid. Please contact support.' });
     }
 
     // ─── DOUBLE-BOOKING PROTECTION ───
