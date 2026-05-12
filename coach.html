@@ -278,6 +278,14 @@ function renderAuth(mode){
         `:''}
         <div class="fl"><label>Email</label><input id="a-email" type="email" placeholder="you@example.com"></div>
         <div class="fl"><label>Password</label><input id="a-pass" type="password" placeholder="${isLogin?'Your password':'Create a password (min 6 chars)'}"></div>
+        ${!isLogin?`
+        <div style="margin:4px 0 20px;padding:14px;background:var(--surface);border-radius:8px;border:1px solid var(--border-light)">
+          <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer;font-weight:400;font-size:13px;color:var(--text);line-height:1.5">
+            <input type="checkbox" id="a-contractor" style="margin-top:2px;flex-shrink:0;width:16px;height:16px;accent-color:var(--brand);cursor:pointer">
+            <span>I agree to the <a href="/policies.html#contractor-agreement" target="_blank" style="color:var(--brand);text-decoration:underline">Independent Contractor Agreement</a>. I am providing coaching services as an independent contractor, not an employee, and I am responsible for my own taxes, insurance, and business expenses.</span>
+          </label>
+        </div>
+        `:''}
         <button class="btn" onclick="handleAuth('${mode}')" id="auth-btn">${isLogin?'Sign In':'Create Account'}</button>
         <div class="auth-toggle">
           ${isLogin?'Don\'t have an account? <a onclick="renderAuth(\'signup\')">Sign up</a>':'Already have an account? <a onclick="renderAuth(\'login\')">Sign in</a>'}
@@ -306,6 +314,9 @@ async function handleAuth(mode){
     const last=document.getElementById('a-last').value.trim();
     if(!first||!last){errEl.textContent='Please enter your name.';errEl.style.display='block';btn.disabled=false;btn.textContent='Create Account';return}
 
+    const contractorAgreed=document.getElementById('a-contractor')?.checked;
+    if(!contractorAgreed){errEl.textContent='Please agree to the Independent Contractor Agreement.';errEl.style.display='block';btn.disabled=false;btn.textContent='Create Account';return}
+
     const {data,error}=await sb.auth.signUp({email,password:pass});
     if(error){errEl.textContent=error.message;errEl.style.display='block';btn.disabled=false;btn.textContent='Create Account';return}
 
@@ -320,7 +331,8 @@ async function handleAuth(mode){
       price:100,
       status:'pending',
       schedule:{},
-      specialties:[]
+      specialties:[],
+      contractor_agreement_accepted_at:new Date().toISOString()
     });
     if(profErr)console.error('Profile creation error:',profErr);
 
