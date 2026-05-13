@@ -125,6 +125,16 @@ export default async function handler(req, res) {
         break;
       }
 
+      // ─── REVIEW PROMPT (sent 3h after lesson) ───
+      case 'review_prompt': {
+        emails.push({
+          to: data.studentEmail,
+          subject: `How was your lesson with ${data.coachFirstName}?`,
+          html: reviewPromptEmail(data),
+        });
+        break;
+      }
+
       default:
         return res.status(400).json({ error: `Unknown email type: ${type}` });
     }
@@ -340,5 +350,25 @@ function coachApprovedEmail(d) {
     <a href="https://swingablegolf.com/coach.html" style="${buttonStyle}">Set up payouts</a>
     <p>Until you complete payout setup, students won't be able to book paid lessons with you.</p>
     <p style="color:#9e9e9e;font-size:12px;margin-top:32px">Swingable Golf · Questions? Reply to this email.</p>
+  </div>`;
+}
+
+function reviewPromptEmail(d) {
+  const coachPhotoHTML = d.coachPhoto
+    ? `<img src="${d.coachPhoto}" alt="${d.coachName}" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.08);display:block;margin:0 auto 12px">`
+    : '';
+  return `<div style="${baseStyle}">
+    <div style="text-align:center;padding:8px 0 4px">
+      ${coachPhotoHTML}
+      <h2 style="color:#14442b;margin:4px 0 0">How was your lesson?</h2>
+    </div>
+    <p>Hi ${d.studentName},</p>
+    <p>Hope your lesson with <strong>${d.coachName}</strong> on ${d.lessonDate} at ${d.lessonTime} went well.</p>
+    <p>If you have a moment, would you share how it went? It takes about 30 seconds and helps other students find the right coach — and helps ${d.coachFirstName} get more bookings.</p>
+    <div style="text-align:center;margin:24px 0">
+      <a href="${d.reviewLink}" style="${buttonStyle}">Leave a review</a>
+    </div>
+    <p style="font-size:13px;color:#6b6b6b">Not interested? No problem — you can just ignore this email. We only send one of these.</p>
+    <p style="color:#9e9e9e;font-size:12px;margin-top:32px">Swingable Golf · Dallas, TX</p>
   </div>`;
 }
