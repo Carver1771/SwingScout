@@ -224,10 +224,10 @@ async function syncStripeStatus(showLoadingState){
   }
 
   try{
-    const res=await fetch('/api/check-coach-status',{
+    const res=await fetch('/api/coach-stripe',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({coachId:coachProfile.id})
+      body:JSON.stringify({action:'check_status',coachId:coachProfile.id})
     });
     const data=await res.json();
 
@@ -1387,10 +1387,10 @@ async function openStripeDashboard(){
   if(btn){btn.disabled=true;btn.textContent='Opening...'}
 
   try{
-    const res=await fetch('/api/coach-dashboard-link',{
+    const res=await fetch('/api/coach-stripe',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({coachId:coachProfile.id})
+      body:JSON.stringify({action:'dashboard_link',coachId:coachProfile.id})
     });
     const data=await res.json();
 
