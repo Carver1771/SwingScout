@@ -566,7 +566,7 @@ function renderProfileTab(){
       </div>
       <div class="fl">
         <label>Years of Experience</label>
-        <input id="e-yrs" type="number" value="${c.years_experience||0}" min="0" max="50">
+        <input id="e-yrs" type="number" value="${c.years_experience||0}" min="0" max="70">
       </div>
       <div class="fl">
         <label id="spec-label">Specialties (${(c.specialties||[]).length}/${MAX_SPECS})</label>
@@ -784,18 +784,18 @@ async function saveProfile(){
 
   const locVal=document.getElementById('e-loc').value;
   const isOther=locVal==='other';
-
-  // Build location_instructions JSONB — keyed by location_id (or 'custom' for other)
   const locKey=isOther?'custom':(locVal||'none');
   const instructionsValue=document.getElementById('e-instructions')?.value.trim()||'';
-  const newLocationInstructions={...(coachProfile.location_instructions||{})};
-  if(instructionsValue){
-    newLocationInstructions[locKey]=instructionsValue;
-  } else {
-    delete newLocationInstructions[locKey];
+
+  // Get the session token to authenticate the API call
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session){
+    msg.innerHTML='<span style="color:var(--danger)">Your session expired. Please sign in again.</span>';
+    btn.disabled=false;btn.textContent='Save Changes';
+    return false;
   }
 
-  const updates={
+  const payload={
     first_name:document.getElementById('e-first').value.trim(),
     last_name:document.getElementById('e-last').value.trim(),
     phone:document.getElementById('e-phone').value.trim(),
@@ -804,29 +804,48 @@ async function saveProfile(){
     linkedin:document.getElementById('e-linkedin').value.trim(),
     certifications:document.getElementById('e-certs').value.trim(),
     achievements:document.getElementById('e-achievements').value.trim(),
-    price:parseInt(document.getElementById('e-price').value)||100,
-    location_id:isOther?null:locVal||null,
-    custom_facility_name:isOther?(document.getElementById('e-facname').value.trim()||null):null,
-    custom_facility_address:isOther?(document.getElementById('e-facaddr').value.trim()||null):null,
-    location_instructions:newLocationInstructions,
+    price:parseInt(document.getElementById('e-price').value)||0,
+    location_id:isOther?'other':(locVal||null),
+    custom_facility_name:isOther?document.getElementById('e-facname').value.trim():null,
+    custom_facility_address:isOther?document.getElementById('e-facaddr').value.trim():null,
+    location_instructions_key:locKey,
+    location_instructions_for_key:instructionsValue,
     short_bio:document.getElementById('e-sbio').value.trim(),
     full_bio:document.getElementById('e-fbio').value.trim(),
     pga_certified:document.getElementById('e-pga').checked,
     years_experience:parseInt(document.getElementById('e-yrs').value)||0,
     specialties:coachProfile.specialties||[],
-    updated_at:new Date().toISOString()
   };
 
-  const {error}=await sb.from('coaches').update(updates).eq('id',coachProfile.id);
+  let res, json;
+  try{
+    res=await fetch('/api/save-coach-profile',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'Authorization':'Bearer '+session.access_token,
+      },
+      body:JSON.stringify(payload),
+    });
+    json=await res.json();
+  }catch(networkErr){
+    msg.innerHTML='<span style="color:var(--danger)">Could not reach server. Check your connection and try again.</span>';
+    btn.disabled=false;btn.textContent='Save Changes';
+    return false;
+  }
 
-  if(error){
-    msg.innerHTML='<span style="color:var(--danger)">Error: '+error.message+'</span>';
+  if(!res.ok){
+    msg.innerHTML='<span style="color:var(--danger)">'+(json.error||'Save failed')+'</span>';
+    btn.disabled=false;btn.textContent='Save Changes';
+    return false;
   } else {
-    Object.assign(coachProfile,updates);
+    // Sync local copy with what server actually saved
+    Object.assign(coachProfile,json.updates||{});
     msg.innerHTML='<span style="color:var(--success)">✓ Profile saved!</span>';
     setTimeout(()=>{msg.innerHTML=''},3000);
   }
   btn.disabled=false;btn.textContent='Save Changes';
+  return true;
 }
 
 // Get lesson instructions for the coach's current location
@@ -840,7 +859,11 @@ function getLessonInstructions(c){
 async function submitForReview(){
   const btn=document.getElementById('submit-btn');
   const msg=document.getElementById('save-msg');
-  await saveProfile();
+  const ok=await saveProfile();
+  if(!ok){
+    // saveProfile already displayed the error message
+    return;
+  }
   btn.disabled=true;btn.textContent='Submitting...';
   const {error}=await sb.from('coaches').update({profile_submitted:true,updated_at:new Date().toISOString()}).eq('id',coachProfile.id);
   if(error){msg.innerHTML='<span style="color:var(--danger)">Error: '+error.message+'</span>';btn.disabled=false;btn.textContent='Submit for Review';return}
