@@ -1185,15 +1185,21 @@ function submitContact(){
 // ══════════════════════════════════════
 let revRating=0;
 
-function showReviewForm(id){
+function showReviewForm(id,prefillName){
   const i=instructors.find(x=>x.id===id);lS();
   revRating=0;
+  revPrefillName=prefillName||'';
   renderReviewForm(i);
 }
+
+let revPrefillName='';
 
 function renderReviewForm(i){
   const stars=[1,2,3,4,5].map(n=>`<span class="star-pick ${n<=revRating?'on':''}" onmouseover="previewStars(${n})" onmouseout="resetStars()" onclick="revRating=${n};renderReviewForm(instructors.find(x=>x.id==='${i.id}'))">★</span>`).join('');
   const labels=['','Poor','Fair','Good','Great','Excellent'];
+  // Preserve any in-progress name/text across re-renders triggered by star clicks
+  const currentName=document.getElementById('rev-name')?.value||revPrefillName||'';
+  const currentText=document.getElementById('rev-text')?.value||'';
   mr.innerHTML=`<div class="mo no-anim" onclick="cM()"><div class="md" style="max-width:460px" onclick="event.stopPropagation()">
     <div class="bh"><div><div class="bt">Review ${i.name}</div><div class="bs">Share your experience to help other students</div></div><button class="cb" style="position:static" onclick="cM()">✕</button></div>
     <div class="bf">
@@ -1201,8 +1207,8 @@ function renderReviewForm(i){
       <div class="fl"><label>Your Rating</label></div>
       <div class="star-picker" id="star-picker">${stars}</div>
       ${revRating>0?`<div style="font-size:13px;color:var(--brand);font-weight:600;margin-top:-8px;margin-bottom:14px">${labels[revRating]}</div>`:''}
-      <div class="fl"><label>Your Name</label><input id="rev-name" placeholder="First name or initials"></div>
-      <div class="fl"><label>Your Review</label><textarea id="rev-text" rows="4" placeholder="What was your experience like? What did you learn? Would you recommend this coach?"></textarea></div>
+      <div class="fl"><label>Your Name</label><input id="rev-name" placeholder="First name or initials" value="${currentName.replace(/"/g,'&quot;')}"></div>
+      <div class="fl"><label>Your Review</label><textarea id="rev-text" rows="4" placeholder="What was your experience like? What did you learn? Would you recommend this coach?">${currentText.replace(/</g,'&lt;')}</textarea></div>
       <button class="sbtn" onclick="submitReview('${i.id}')" ${!revRating?'style="opacity:.5;cursor:not-allowed" disabled':''}>
         ${revRating?'Submit Review':'Select a rating to continue'}
       </button>
@@ -1314,6 +1320,9 @@ async function loadData(){
     const sv=document.getElementById('stat-venues');
     if(sv)sv.textContent=locations.length+'+';
 
+    // Auto-open review form if linked from email
+    checkReviewLink();
+
     console.log('Swingable Golf: Loaded '+instructors.length+' coaches from '+locations.length+' locations');
   }catch(err){
     console.error('Failed to load data:',err);
@@ -1321,6 +1330,37 @@ async function loadData(){
     const ls=document.getElementById('ls');
     if(ls)ls.innerHTML='<div style="text-align:center;padding:40px;color:#c33">Failed to load coaches. Please refresh the page.</div>';
   }
+}
+
+// If the URL has ?review_for=COACH_ID&token=STUDENT_TOKEN&booking=BOOKING_ID,
+// auto-open the review form for that coach pre-filled with the student's name.
+async function checkReviewLink(){
+  const params=new URLSearchParams(window.location.search);
+  const reviewFor=params.get('review_for');
+  const token=params.get('token');
+  const bookingId=params.get('booking');
+  if(!reviewFor||!token)return;
+
+  // Look up the booking to verify the token matches and get the student name
+  const {data:booking}=await sb.from('bookings')
+    .select('student_name,coach_id,student_token')
+    .eq('id',bookingId)
+    .single();
+
+  // Validate: booking exists, token matches, coach matches
+  if(!booking||booking.student_token!==token||booking.coach_id!==reviewFor){
+    console.warn('Review link invalid or expired');
+    return;
+  }
+
+  const coach=instructors.find(x=>x.id===reviewFor);
+  if(!coach)return;
+
+  // Clean URL so refreshing doesn't re-trigger
+  window.history.replaceState({},'','/');
+
+  // Open review form with name pre-filled
+  showReviewForm(reviewFor,booking.student_name||'');
 }
 loadData();
 </script>
