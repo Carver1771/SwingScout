@@ -58,6 +58,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .btn-danger{background:var(--danger);color:#fff}
 .btn-danger:hover{background:#c82333}
 
+/* Booking action buttons (Approve/Decline/Email/Cancel) — class so mobile can scale them up */
+.bk-act-btn{padding:6px 16px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;text-decoration:none}
+
 /* Dashboard Layout */
 .dash{max-width:960px;margin:0 auto;padding:24px 20px}
 .dash-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:32px}
@@ -127,6 +130,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   .tabs{overflow-x:auto}
   .tab{white-space:nowrap;padding:10px 14px;font-size:13px}
   .logo .logo-text{display:none}
+  /* Prevent iOS auto-zoom when tapping into form fields */
+  .fl input,.fl select,.fl textarea{font-size:16px}
+  /* Bigger tap targets for booking action buttons on mobile */
+  .bk-act-btn{padding:10px 18px;font-size:13px}
 }
 </style>
 </head>
@@ -271,9 +278,9 @@ function renderAuth(mode){
         <div class="auth-error" id="auth-error"></div>
         <div class="auth-success" id="auth-success"></div>
         ${!isLogin?`
-        <div style="display:flex;gap:12px">
-          <div class="fl" style="flex:1"><label>First Name</label><input id="a-first" placeholder="John"></div>
-          <div class="fl" style="flex:1"><label>Last Name</label><input id="a-last" placeholder="Smith"></div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px">
+          <div class="fl"><label>First Name</label><input id="a-first" placeholder="John"></div>
+          <div class="fl"><label>Last Name</label><input id="a-last" placeholder="Smith"></div>
         </div>
         `:''}
         <div class="fl"><label>Email</label><input id="a-email" type="email" placeholder="you@example.com"></div>
@@ -1237,15 +1244,15 @@ function renderBookingsTab(){
     if(b.status==='pending'){
       actions=`
         <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
-          <button style="padding:6px 16px;background:var(--success);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer" onclick="updateBooking('${b.id}','confirmed')">Approve</button>
-          <button style="padding:6px 16px;background:var(--danger);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer" onclick="updateBooking('${b.id}','cancelled')">Decline</button>
-          <a href="mailto:${b.student_email}?subject=Your%20Swingable%20Golf%20Lesson%20Request" style="padding:6px 16px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;text-decoration:none">Email Student</a>
+          <button class="bk-act-btn" style="background:var(--success);color:#fff;border:none" onclick="updateBooking('${b.id}','confirmed')">Approve</button>
+          <button class="bk-act-btn" style="background:var(--danger);color:#fff;border:none" onclick="updateBooking('${b.id}','cancelled')">Decline</button>
+          <a href="mailto:${b.student_email}?subject=Your%20Swingable%20Golf%20Lesson%20Request" class="bk-act-btn" style="background:var(--surface);color:var(--text);border:1px solid var(--border)">Email Student</a>
         </div>`;
     } else if(b.status==='confirmed'){
       actions=`
         <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
-          <a href="mailto:${b.student_email}?subject=Your%20Swingable%20Golf%20Lesson%20on%20${encodeURIComponent(dateStr)}" style="padding:6px 16px;background:var(--brand);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;text-decoration:none">Email Student</a>
-          <button style="padding:6px 16px;background:var(--surface);color:var(--danger);border:1px solid var(--danger);border-radius:6px;font-size:12px;font-weight:600;cursor:pointer" onclick="cancelConfirmedLesson('${b.id}')">Cancel Lesson</button>
+          <a href="mailto:${b.student_email}?subject=Your%20Swingable%20Golf%20Lesson%20on%20${encodeURIComponent(dateStr)}" class="bk-act-btn" style="background:var(--brand);color:#fff;border:none">Email Student</a>
+          <button class="bk-act-btn" style="background:var(--surface);color:var(--danger);border:1px solid var(--danger)" onclick="cancelConfirmedLesson('${b.id}')">Cancel Lesson</button>
         </div>`;
     }
 
